@@ -57,7 +57,7 @@ docker compose version
 
 ```bash
 cd ~
-git clone <URL-DO-REPOSITORIO> gestao-bar
+git clone https://github.com/caiovlage/gestao-bar.git gestao-bar
 cd ~/gestao-bar
 ```
 
