@@ -1,0 +1,6 @@
+# Finais de linha LF no repositório e no checkout (o servidor de produção é Linux)
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
+*.jpg binary

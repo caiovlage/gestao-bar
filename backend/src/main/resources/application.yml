@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: gestao-bar
+  # Em desenvolvimento local, lê o arquivo .env da raiz do projeto (mesmo usado pelo Docker Compose).
+  config:
+    import: "optional:file:../.env[.properties],optional:file:.env[.properties]"
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/${POSTGRES_DB:gestao_bar}}
+    username: ${DB_USER:${POSTGRES_USER:gestao_bar}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD:}}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+
+app:
+  upload-dir: ${UPLOAD_DIR:uploads}
+  security:
+    jwt-secret: ${JWT_SECRET:}
+    jwt-expiration: ${JWT_EXPIRATION:PT12H}
+    admin-login: ${ADMIN_LOGIN:}
+    admin-password: ${ADMIN_PASSWORD:}
+    cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:*}
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    br.com.bar.gestao: INFO

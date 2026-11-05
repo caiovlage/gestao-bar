@@ -1,0 +1,10 @@
+name: gestao_bar_workspace
+description: Workspace Flutter do sistema de gestão do bar.
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+workspace:
+  - packages/core
+  - apps/admin

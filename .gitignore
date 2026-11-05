@@ -1,0 +1,10 @@
+.env
+backend/build/
+backend/.gradle/
+backend/uploads/
+frontend/**/build/
+frontend/**/.dart_tool/
+frontend/**/.flutter-plugins*
+*.iml
+.idea/
+.vscode/
