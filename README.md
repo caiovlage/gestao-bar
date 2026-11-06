@@ -29,7 +29,8 @@ docs/               instalação, arquitetura e decisões
 | 3. Receitas — cadastro e consulta, colando a formatação de sites | ✅ concluída |
 | 4. Vendas e Caixa — PDV, desconto, troco, cancelamento, abertura e fechamento de caixa | ✅ concluída |
 | 5. Compras — sugestões, listas (PDF/Excel), recebimento e custo médio | ✅ concluída |
-| 6. Pedidos web · 7. BI | próximas |
+| 7. BI — dashboard, relatórios, despesas, dados de demonstração | ✅ concluída |
+| 6. Pedidos web (cardápio por QR Code) | próxima |
 
 ## Instalar ou atualizar no servidor (Oracle Linux)
 

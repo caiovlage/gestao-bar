@@ -14,8 +14,7 @@ class ItemMenu {
 }
 
 const itensMenu = <ItemMenu>[
-  ItemMenu('Dashboard', Icons.dashboard_outlined, '/dashboard', etapa: 7,
-      descricao: 'Faturamento, ticket médio, margens, produtos mais vendidos e alertas de estoque.'),
+  ItemMenu('Dashboard', Icons.dashboard_outlined, '/dashboard'),
   ItemMenu('Vendas', Icons.point_of_sale_outlined, '/vendas'),
   ItemMenu('Pedidos', Icons.receipt_long_outlined, '/pedidos', etapa: 6,
       descricao: 'Pedidos do cardápio digital, status de preparo e registro de pagamento.'),
@@ -26,9 +25,7 @@ const itensMenu = <ItemMenu>[
   ItemMenu('Compras', Icons.shopping_cart_outlined, '/compras'),
   ItemMenu('Fornecedores', Icons.local_shipping_outlined, '/fornecedores'),
   ItemMenu('Caixa', Icons.account_balance_wallet_outlined, '/caixa'),
-  ItemMenu('Despesas', Icons.request_quote_outlined, '/despesas', etapa: 7,
-      descricao: 'Registro de despesas operacionais (água, luz, aluguel...).'),
-  ItemMenu('Relatórios', Icons.insights_outlined, '/relatorios', etapa: 7,
-      descricao: 'Relatórios gerenciais: vendas por período, margens, horários e giro de estoque.'),
+  ItemMenu('Despesas', Icons.request_quote_outlined, '/despesas'),
+  ItemMenu('Relatórios', Icons.insights_outlined, '/relatorios'),
   ItemMenu('Configurações', Icons.settings_outlined, '/configuracoes'),
 ];

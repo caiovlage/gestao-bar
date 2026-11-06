@@ -10,6 +10,8 @@ import '../features/categorias/categorias_page.dart';
 import '../features/compras/compra_page.dart';
 import '../features/compras/compras_page.dart';
 import '../features/configuracoes/configuracoes_page.dart';
+import '../features/dashboard/dashboard_page.dart';
+import '../features/despesas/despesas_page.dart';
 import '../features/em_breve/em_breve_page.dart';
 import '../features/estoque/estoque_page.dart';
 import '../features/estoque/inventario_page.dart';
@@ -19,6 +21,7 @@ import '../features/produtos/produtos_page.dart';
 import '../features/receitas/receita_form_page.dart';
 import '../features/receitas/receita_page.dart';
 import '../features/receitas/receitas_page.dart';
+import '../features/relatorios/relatorios_page.dart';
 import '../features/vendas/pdv_page.dart';
 import '../features/vendas/vendas_page.dart';
 import 'menu.dart';
@@ -31,7 +34,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(atualizar.dispose);
 
   return GoRouter(
-    initialLocation: '/produtos',
+    initialLocation: '/dashboard',
     refreshListenable: atualizar,
     redirect: (context, state) {
       final auth = ref.read(authProvider);
@@ -44,7 +47,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return local == '/login' ? null : '/login';
       }
       if (local == '/login' || local == '/carregando') {
-        return '/produtos';
+        return '/dashboard';
       }
       return null;
     },
@@ -56,6 +59,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => AdminShell(child: child),
         routes: [
+          GoRoute(path: '/dashboard', builder: (_, _) => const DashboardPage()),
+          GoRoute(path: '/relatorios', builder: (_, _) => const RelatoriosPage()),
+          GoRoute(path: '/despesas', builder: (_, _) => const DespesasPage()),
           GoRoute(path: '/produtos', builder: (_, _) => const ProdutosPage()),
           GoRoute(
             path: '/produtos/novo',
