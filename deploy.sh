@@ -59,11 +59,24 @@ main() {
   local PROJETO; PROJETO="${COMPOSE_PROJECT_NAME:-$(basename "$RAIZ" | tr '[:upper:]' '[:lower:]')}"
   export PATH="$FLUTTER_DIR/bin:$PATH"
 
-  [[ $EUID -ne 0 ]] || erro "Execute como usuário comum (com sudo), não como root."
+  if [[ $EUID -eq 0 ]]; then
+    erro "Não execute como root: rode com o seu usuário (ex.: opc), que tem sudo.
+     O Docker continua rodando como serviço do sistema; o script dá ao seu usuário
+     acesso a ele (grupo docker) e usa sudo apenas onde é necessário.
+
+     1) Saia do root até o prompt mostrar o seu usuário:   exit
+     2) Clone o projeto na sua pasta e execute:
+          git clone https://github.com/caiovlage/gestao-bar.git ~/gestao-bar
+          cd ~/gestao-bar && ./deploy.sh"
+  fi
   command -v dnf >/dev/null || erro "Este script é para Oracle Linux 8/9 (dnf não encontrado)."
   sudo -v || erro "É necessário acesso sudo."
+  USER="${USER:-$(id -un)}"
 
   titulo "Gestão do Bar — deploy ($(date '+%d/%m/%Y %H:%M'))"
+
+  # Arquivos do projeto criados como root (clone ou comandos com sudo) impedem git e builds.
+  garantir_dono "$RAIZ" "pasta do projeto"
 
   # ================================================================== 1. pré-requisitos
   passo "Pré-requisitos do sistema"
@@ -76,7 +89,11 @@ main() {
     sudo sed -i "s/\$releasever/$(rpm -E %rhel)/g" /etc/yum.repos.d/docker-ce.repo
     sudo dnf install -y --allowerasing docker-ce docker-ce-cli containerd.io \
         docker-buildx-plugin docker-compose-plugin
+  fi
+  # Também quando o Docker já foi instalado antes (por exemplo, pelo root).
+  if ! id -nG "$USER" | grep -qw docker; then
     sudo usermod -aG docker "$USER"
+    info "Usuário $USER adicionado ao grupo docker (vale a partir do próximo login)"
   fi
   sudo systemctl enable --now docker >/dev/null 2>&1
   # Sem precisar sair e entrar de novo na sessão: usa sudo enquanto o grupo docker não valer.
@@ -92,6 +109,8 @@ main() {
       grep -q "$FLUTTER_DIR/bin" ~/.bashrc 2>/dev/null || echo "export PATH=\"$FLUTTER_DIR/bin:\$PATH\"" >> ~/.bashrc
       flutter config --no-analytics --no-enable-android --enable-web >/dev/null
     fi
+    # Flutter instalado ou executado antes como root não consegue atualizar o próprio cache.
+    garantir_dono "$FLUTTER_DIR" "Flutter"
     local VERSAO_FLUTTER; VERSAO_FLUTTER="$(flutter --version 2>/dev/null | awk '/^Flutter/{print $2; exit}')"
     if ! versao_maior_igual "$VERSAO_FLUTTER" "$FLUTTER_MIN"; then
       info "Flutter $VERSAO_FLUTTER é anterior a $FLUTTER_MIN; atualizando"
@@ -305,6 +324,16 @@ instalar_pacotes() {
 # Substitui CHAVE=valor no .env (valores gerados são hexadecimais, seguros para o sed).
 definir_env() {
   if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi
+}
+
+# Se houver arquivos em $1 que não pertencem ao usuário atual, devolve a posse a ele.
+garantir_dono() {
+  [[ -d "$1" ]] || return 0
+  local alheio; alheio="$(sudo find "$1" ! -user "$USER" -print -quit 2>/dev/null)"
+  if [[ -n "$alheio" ]]; then
+    info "Corrigindo dono dos arquivos de $2 ($1) para $USER (havia arquivos de outro usuário, ex.: root)"
+    sudo chown -R "$USER": "$1"
+  fi
 }
 
 versao_maior_igual() {
