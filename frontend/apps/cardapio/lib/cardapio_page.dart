@@ -72,7 +72,7 @@ class _CardapioPageState extends State<CardapioPage> {
       builder: (_) => _CarrinhoSheet(carrinho: _carrinho),
     );
     if (pedido == null || !mounted) return;
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PedidoPage(pedidoId: pedido.id, inicial: pedido)));
+    await Navigator.of(context).pushNamed(rotaPedido(pedido.id), arguments: pedido);
     _carregarMeusPedidos();
     _recarregar();
   }
@@ -168,7 +168,7 @@ class _CardapioPageState extends State<CardapioPage> {
               constraints: const BoxConstraints(maxWidth: 720),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 for (final p in _meusPedidos) _AvisoPedido(pedido: p, aoAbrir: () async {
-                  await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PedidoPage(pedidoId: p.id)));
+                  await Navigator.of(context).pushNamed(rotaPedido(p.id), arguments: p);
                   _carregarMeusPedidos();
                 }),
                 if (!c.aberto)

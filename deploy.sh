@@ -286,8 +286,10 @@ main() {
     fi
     if [[ ! -d frontend/apps/cardapio/web ]]; then
       (cd frontend/apps/cardapio && flutter create . --platforms=web --project-name gestao_bar_cardapio --no-pub >/dev/null)
-      sed -i 's#<title>.*</title>#<title>Cardápio</title>#' frontend/apps/cardapio/web/index.html
     fi
+    # Página inicial otimizada para celular (tela de carregamento imediata, cores, ícone na tela inicial)
+    cp frontend/apps/cardapio/web_modelo/index.html frontend/apps/cardapio/web/index.html
+    sed -i 's/"name": *"[^"]*"/"name": "Cardápio"/; s/"short_name": *"[^"]*"/"short_name": "Cardápio"/; s/"background_color": *"[^"]*"/"background_color": "#15120F"/; s/"theme_color": *"[^"]*"/"theme_color": "#15120F"/'         frontend/apps/cardapio/web/manifest.json
     if [[ $LIMPO -eq 1 ]]; then
       (cd frontend/apps/admin && flutter clean >/dev/null)
       (cd frontend/apps/cardapio && flutter clean >/dev/null)
@@ -297,7 +299,8 @@ main() {
     info "Compilando o painel (/admin/)"
     (cd frontend/apps/admin && flutter build web --release --base-href /admin/)
     info "Compilando o cardápio (/cardapio/)"
-    (cd frontend/apps/cardapio && flutter build web --release --base-href /cardapio/)
+    # --no-web-resources-cdn: o motor gráfico do Flutter sai do próprio servidor, sem depender do CDN do Google
+    (cd frontend/apps/cardapio && flutter build web --release --base-href /cardapio/ --no-web-resources-cdn)
     rsync -a --delete frontend/apps/admin/build/web/ "$WEB_DIR/"
     rsync -a --delete frontend/apps/cardapio/build/web/ "$CARDAPIO_DIR/"
     if command -v restorecon >/dev/null; then sudo restorecon -R /var/www/gestao-bar; fi

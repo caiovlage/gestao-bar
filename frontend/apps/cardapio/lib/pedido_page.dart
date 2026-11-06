@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 
 import 'dados.dart';
 
+/// Rota com o id do pedido (ex.: #/pedido/…): entra no histórico do navegador, então o botão
+/// "voltar" do celular retorna ao cardápio, e o link pode ser reaberto para acompanhar o pedido.
+String rotaPedido(String id) => '/pedido/$id';
+
 /// Acompanhamento do pedido pelo cliente: consulta o status a cada 8 segundos até finalizar.
 class PedidoPage extends StatefulWidget {
   const PedidoPage({super.key, required this.pedidoId, this.inicial});
@@ -120,7 +124,9 @@ class _PedidoPageState extends State<PedidoPage> {
                           ),
                         const SizedBox(height: 24),
                         OutlinedButton.icon(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.of(context).canPop()
+                              ? Navigator.pop(context)
+                              : Navigator.of(context).pushReplacementNamed('/'),
                           icon: const Icon(Icons.restaurant_menu),
                           label: const Text('Voltar ao cardápio'),
                         ),
