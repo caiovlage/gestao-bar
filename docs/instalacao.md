@@ -115,6 +115,9 @@ Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho
   cardápio com a mesa já preenchida (`/cardapio/?mesa=5`).
 - Só aparecem no cardápio produtos marcados **"Vende no cardápio"**, com preço, de categorias
   visíveis no cardápio. Desligue **"Cardápio aberto para pedidos"** para pausar os pedidos.
+- **Vitrine** (Configurações → Vitrine do cardápio): escolha as seções de destaque do topo do cardápio
+  (Sugestões da casa, Promoções, Mais pedidos, Menos pedidos, Novidades), a ordem, os títulos e a
+  quantidade. Promoções e sugestões são definidas no cadastro de cada produto.
 - Os pedidos chegam em **Pedidos** (atualiza a cada 10 s): aceitar (reserva o estoque), avançar o
   preparo e **Receber** (gera a venda no caixa aberto).
 - A câmera do celular lê o QR Code normalmente mesmo sem HTTPS. Com domínio e HTTPS, gere os

@@ -106,6 +106,9 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
   late final _descricao = TextEditingController(text: _produto?.descricao);
   late final _custo = TextEditingController(text: formatarParaEdicao(_produto?.custoMedio));
   late final _preco = TextEditingController(text: formatarParaEdicao(_produto?.precoVenda));
+  late final _promocional = TextEditingController(text: formatarParaEdicao(_produto?.precoPromocional));
+  late DateTime? _promocaoAte = _produto?.promocaoAte;
+  late bool _destaqueCardapio = _produto?.destaqueCardapio ?? false;
   late final _estoqueMinimo = TextEditingController(text: formatarParaEdicao(_produto?.estoqueMinimo ?? 0));
   late final _codigo = TextEditingController(text: _produto?.codigoInterno ?? widget.codigoInicial);
 
@@ -140,7 +143,7 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
 
   @override
   void dispose() {
-    for (final c in [_nome, _descricao, _custo, _preco, _estoqueMinimo, _codigo]) {
+    for (final c in [_nome, _descricao, _custo, _preco, _promocional, _estoqueMinimo, _codigo]) {
       c.dispose();
     }
     for (final e in _embalagens) {
@@ -172,6 +175,9 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
         codigoInterno: _codigo.text.trim().isEmpty ? null : _codigo.text.trim(),
         vendeNoCardapio: _tipo.vendavel && _vendeNoCardapio,
         controlaEstoque: _controlaEstoque,
+        precoPromocional: _tipo.vendavel ? lerDecimal(_promocional.text) : null,
+        promocaoAte: _tipo.vendavel && lerDecimal(_promocional.text) != null ? _promocaoAte : null,
+        destaqueCardapio: _tipo.vendavel && _vendeNoCardapio && _destaqueCardapio,
         embalagens: [
           for (final e in _embalagens)
             (id: e.id, unidadeId: e.unidadeId!, descricao: e.descricao.text.trim(), fator: lerDecimal(e.fator.text)!),
@@ -499,6 +505,82 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
                   value: _vendeNoCardapio,
                   onChanged: (v) => setState(() => _vendeNoCardapio = v),
                 ),
+                if (_vendeNoCardapio)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(Icons.star_outline, color: AppCores.ambarEscuro),
+                    title: const Text('Sugestão da casa'),
+                    subtitle: const Text('Aparece em destaque no topo do cardápio (seção "Sugestões da casa")'),
+                    value: _destaqueCardapio,
+                    onChanged: (v) => setState(() => _destaqueCardapio = v),
+                  ),
+                const SizedBox(height: 12),
+                Text('Promoção', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(
+                  'Com preço promocional, o produto é cobrado por ele no PDV e no cardápio e aparece '
+                  'automaticamente em "Promoções", com o preço normal riscado.',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                _Linha([
+                  TextFormField(
+                    controller: _promocional,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Preço promocional',
+                      hintText: 'Vazio = sem promoção',
+                      prefixText: r'R$ ',
+                      errorText: _erro?.campos['precoPromocional'],
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) {
+                      final promo = lerDecimal(v);
+                      if (v != null && v.trim().isNotEmpty && promo == null) return 'Valor inválido';
+                      final preco = lerDecimal(_preco.text);
+                      if (promo != null && (promo <= 0 || (preco != null && promo >= preco))) {
+                        return 'Deve ser menor que o preço de venda';
+                      }
+                      return null;
+                    },
+                  ),
+                  InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Promoção válida até',
+                      helperText: _promocaoAte == null ? 'Sem data para acabar' : 'Inclusive',
+                      suffixIcon: _promocaoAte == null
+                          ? null
+                          : IconButton(
+                              tooltip: 'Sem data para acabar',
+                              onPressed: () => setState(() => _promocaoAte = null),
+                              icon: const Icon(Icons.clear),
+                            ),
+                    ),
+                    child: InkWell(
+                      onTap: lerDecimal(_promocional.text) == null
+                          ? null
+                          : () async {
+                              final hoje = DateTime.now();
+                              final data = await showDatePicker(
+                                context: context,
+                                initialDate: _promocaoAte ?? hoje,
+                                firstDate: DateTime(hoje.year, hoje.month, hoje.day),
+                                lastDate: DateTime(hoje.year + 2),
+                              );
+                              if (data != null) setState(() => _promocaoAte = data);
+                            },
+                      child: Text(_promocaoAte == null ? 'Escolher data' : formatarData(_promocaoAte)),
+                    ),
+                  ),
+                ]),
+                if (lerDecimal(_promocional.text) != null && (lerDecimal(_preco.text) ?? 0) > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Desconto de ${formatarPercentual((1 - lerDecimal(_promocional.text)! / lerDecimal(_preco.text)!) * 100)}',
+                      style: const TextStyle(color: AppCores.sucesso, fontWeight: FontWeight.w600),
+                    ),
+                  ),
               ],
             ),
           _Secao(

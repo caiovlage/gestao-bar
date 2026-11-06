@@ -1,10 +1,10 @@
-import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'cardapio_page.dart';
 import 'dados.dart';
 import 'pedido_page.dart';
+import 'tema.dart';
 
 void main() {
   runApp(const CardapioApp());
@@ -32,7 +32,7 @@ class CardapioApp extends StatelessWidget {
     return MaterialApp(
       title: 'Cardápio',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.cardapio(),
+      theme: temaCardapio(),
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [

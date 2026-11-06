@@ -25,3 +25,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Playfair Display (SIL Open Font License, assets/fonts/OFL-PlayfairDisplay.txt): títulos do cardápio
+  fonts:
+    - family: Playfair
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay.ttf

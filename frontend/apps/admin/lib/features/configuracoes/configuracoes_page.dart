@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../relatorios/relatorios.dart';
 import '../unidades/unidades.dart';
 import 'qr_codes_page.dart';
+import 'vitrine_card.dart';
 
 final _configuracoesProvider = FutureProvider.autoDispose<Map<String, String>>((ref) async {
   final dados = await ref.watch(apiClientProvider).get('/api/admin/configuracoes') as List;
@@ -34,6 +35,8 @@ class ConfiguracoesPage extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         const CardapioDigitalCard(),
+        const SizedBox(height: 16),
+        const VitrineCard(),
         const SizedBox(height: 16),
         const _UnidadesCard(),
       ],

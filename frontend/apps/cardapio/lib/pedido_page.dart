@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:core/core.dart';
+import 'package:core/core.dart' show formatarMoeda, mensagemDeErro;
 import 'package:flutter/material.dart';
 
 import 'dados.dart';
+import 'tema.dart';
 
 /// Rota com o id do pedido (ex.: #/pedido/…): entra no histórico do navegador, então o botão
 /// "voltar" do celular retorna ao cardápio, e o link pode ser reaberto para acompanhar o pedido.
@@ -92,7 +93,7 @@ class _PedidoPageState extends State<PedidoPage> {
                                         Text('${i.quantidade}× ${i.produtoNome}'),
                                         if (i.observacao != null)
                                           Text(i.observacao!,
-                                              style: const TextStyle(fontSize: 13, color: Color(0xFFB8AC9C))),
+                                              style: const TextStyle(fontSize: 13, color: Paleta.textoSuave)),
                                       ]),
                                     ),
                                     Text(formatarMoeda(i.total)),
@@ -102,14 +103,13 @@ class _PedidoPageState extends State<PedidoPage> {
                               const Divider(height: 24),
                               Row(children: [
                                 const Expanded(child: Text('Total', style: TextStyle(fontSize: 16))),
-                                Text(formatarMoeda(p.total),
-                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                                Text(formatarMoeda(p.total), style: serifa(24, cor: Paleta.ouro)),
                               ]),
                               const SizedBox(height: 4),
                               Text(
                                 p.pago ? 'Pagamento recebido. Obrigado!' : 'Pagamento no local, com o atendente.',
                                 style: TextStyle(
-                                  color: p.pago ? const Color(0xFF4ADE80) : const Color(0xFFB8AC9C),
+                                  color: p.pago ? Paleta.sucesso : Paleta.textoSuave,
                                   fontSize: 13,
                                 ),
                               ),
@@ -148,7 +148,7 @@ class _Cabecalho extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cancelado = pedido.etapa == EtapaPedido.cancelado;
-    final cor = cancelado ? const Color(0xFFF87171) : AppCores.ambar;
+    final cor = cancelado ? Paleta.erro : Paleta.ouro;
     return Column(children: [
       const SizedBox(height: 8),
       CircleAvatar(
@@ -169,9 +169,9 @@ class _Cabecalho extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Text(pedido.etapa.titulo,
-          textAlign: TextAlign.center, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+          textAlign: TextAlign.center, style: serifa(30)),
       const SizedBox(height: 4),
-      Text(pedido.etapa.descricao, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFB8AC9C))),
+      Text(pedido.etapa.descricao, textAlign: TextAlign.center, style: const TextStyle(color: Paleta.textoSuave)),
     ]);
   }
 }
@@ -199,15 +199,15 @@ class _Linha extends StatelessWidget {
             child: Container(
               height: 3,
               margin: const EdgeInsets.only(bottom: 22),
-              color: etapa.index >= _passos[i].$1.index ? AppCores.ambar : const Color(0xFF3A322A),
+              color: etapa.index >= _passos[i].$1.index ? Paleta.ouro : Paleta.linha,
             ),
           ),
         Column(children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: etapa.index >= _passos[i].$1.index ? AppCores.ambar : const Color(0xFF3A322A),
+            backgroundColor: etapa.index >= _passos[i].$1.index ? Paleta.ouro : Paleta.linha,
             child: etapa.index >= _passos[i].$1.index
-                ? const Icon(Icons.check, size: 14, color: AppCores.sobreAmbar)
+                ? const Icon(Icons.check, size: 14, color: Paleta.fundo)
                 : null,
           ),
           const SizedBox(height: 6),

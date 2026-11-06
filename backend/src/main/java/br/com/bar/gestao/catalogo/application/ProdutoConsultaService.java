@@ -9,11 +9,14 @@ import br.com.bar.gestao.catalogo.domain.UnidadeMedida;
 import br.com.bar.gestao.catalogo.domain.UnidadeMedidaRepository;
 import br.com.bar.gestao.shared.exception.NegocioException;
 import br.com.bar.gestao.shared.exception.RecursoNaoEncontradoException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -32,25 +35,29 @@ public class ProdutoConsultaService {
     private final UnidadeMedidaRepository unidadeRepository;
     private final CategoriaRepository categoriaRepository;
     private final ConversaoUnidadeService conversao;
+    private final ZoneId fuso;
 
     public ProdutoConsultaService(ProdutoRepository produtoRepository, UnidadeMedidaRepository unidadeRepository,
-                                  CategoriaRepository categoriaRepository, ConversaoUnidadeService conversao) {
+                                  CategoriaRepository categoriaRepository, ConversaoUnidadeService conversao,
+                                  @Value("${app.fuso-horario:America/Sao_Paulo}") String fuso) {
         this.produtoRepository = produtoRepository;
         this.unidadeRepository = unidadeRepository;
         this.categoriaRepository = categoriaRepository;
         this.conversao = conversao;
+        this.fuso = ZoneId.of(fuso);
     }
 
     /** Dados essenciais de um produto para outros módulos. */
     public record ProdutoResumo(UUID id, String nome, String unidadeSigla, BigDecimal custoMedio, boolean ativo,
                                 UUID categoriaId, String categoriaNome, boolean vendavel, BigDecimal precoVenda,
-                                boolean controlaEstoque) {
+                                boolean controlaEstoque, BigDecimal precoVigente) {
 
-        static ProdutoResumo of(Produto p) {
+        /** {@code precoVigente}: preço cobrado hoje (promocional, se a promoção estiver valendo). */
+        static ProdutoResumo of(Produto p, LocalDate hoje) {
             return new ProdutoResumo(p.getId(), p.getNome(), p.getUnidadeEstoque().getSigla(), p.getCustoMedio(),
                     p.isAtivo(), p.getCategoria() == null ? null : p.getCategoria().getId(),
                     p.getCategoria() == null ? null : p.getCategoria().getNome(), p.getTipo().isVendavel(),
-                    p.getPrecoVenda(), p.isControlaEstoque());
+                    p.getPrecoVenda(), p.isControlaEstoque(), p.precoVigente(hoje));
         }
     }
 
@@ -61,7 +68,7 @@ public class ProdutoConsultaService {
 
     @Transactional(readOnly = true)
     public ProdutoResumo resumo(UUID produtoId) {
-        return ProdutoResumo.of(carregar(produtoId));
+        return ProdutoResumo.of(carregar(produtoId), hoje());
     }
 
     @Transactional(readOnly = true)
@@ -70,8 +77,13 @@ public class ProdutoConsultaService {
             return Map.of();
         }
         return produtoRepository.findByIdIn(produtoIds).stream()
-                .map(ProdutoResumo::of)
+                .map(p -> ProdutoResumo.of(p, hoje()))
                 .collect(Collectors.toMap(ProdutoResumo::id, Function.identity()));
+    }
+
+    /** Data de hoje no fuso do bar (validade das promoções). */
+    public LocalDate hoje() {
+        return LocalDate.now(fuso);
     }
 
     @Transactional(readOnly = true)

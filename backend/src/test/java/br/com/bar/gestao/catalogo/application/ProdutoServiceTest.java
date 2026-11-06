@@ -59,7 +59,7 @@ class ProdutoServiceTest {
     private ProdutoDto.Request request(TipoProduto tipo, UnidadeMedida unidade, BigDecimal preco, boolean cardapio,
                                        List<ProdutoDto.EmbalagemRequest> embalagens) {
         return new ProdutoDto.Request("Cerveja lata", null, null, tipo, unidade.getId(), new BigDecimal("3.50"), preco,
-                new BigDecimal("48"), null, null, cardapio, embalagens, null);
+                new BigDecimal("48"), null, null, cardapio, embalagens, null, null, null, null);
     }
 
     @Test
@@ -120,7 +120,7 @@ class ProdutoServiceTest {
     void rejeitaCodigoInternoDuplicado() {
         when(produtoRepository.existsByCodigoInternoIgnoreCaseAndIdNot(any(), any())).thenReturn(true);
         var req = new ProdutoDto.Request("Cerveja", null, null, TipoProduto.REVENDA, un.getId(), BigDecimal.ONE,
-                BigDecimal.TEN, BigDecimal.ZERO, null, "CRV01", false, List.of(), null);
+                BigDecimal.TEN, BigDecimal.ZERO, null, "CRV01", false, List.of(), null, null, null, null);
 
         assertThatThrownBy(() -> service.criar(req))
                 .isInstanceOf(NegocioException.class)

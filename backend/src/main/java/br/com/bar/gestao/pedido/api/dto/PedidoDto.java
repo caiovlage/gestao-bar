@@ -25,15 +25,24 @@ public final class PedidoDto {
 
     // ---------------------------------------------------------------- cardápio público
 
-    public record Cardapio(String nomeBar, boolean aberto, List<CategoriaCardapio> categorias) {
+    /** {@code destaques}: seções da vitrine, na ordem configurada no painel (só as ativas e com produtos). */
+    public record Cardapio(String nomeBar, boolean aberto, List<CategoriaCardapio> categorias,
+                           List<SecaoDestaque> destaques) {
+    }
+
+    /** Seção de destaque: {@code produtos} são ids de produtos presentes em {@code categorias}. */
+    public record SecaoDestaque(VitrineDto.TipoSecao tipo, String titulo, List<UUID> produtos) {
     }
 
     public record CategoriaCardapio(UUID id, String nome, List<ProdutoCardapio> produtos) {
     }
 
-    /** {@code esgotado}: produto com controle de estoque sem saldo disponível. */
-    public record ProdutoCardapio(UUID id, String nome, String descricao, BigDecimal preco, String imagemUrl,
-                                  boolean esgotado) {
+    /**
+     * {@code preco}: preço cobrado hoje; {@code precoOriginal}: preço normal, só durante a promoção.
+     * {@code destaque}: "sugestão da casa". {@code esgotado}: controle de estoque sem saldo disponível.
+     */
+    public record ProdutoCardapio(UUID id, String nome, String descricao, BigDecimal preco, BigDecimal precoOriginal,
+                                  String imagemUrl, boolean esgotado, boolean destaque) {
     }
 
     // ---------------------------------------------------------------- criação (cliente)

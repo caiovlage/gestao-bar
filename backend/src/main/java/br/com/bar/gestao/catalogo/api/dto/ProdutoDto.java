@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +34,13 @@ public final class ProdutoDto {
             Boolean vendeNoCardapio,
             @Valid @Size(max = 20) List<EmbalagemRequest> embalagens,
             /** Falso para pratos preparados (sem controle de estoque). Ausente = true. */
-            Boolean controlaEstoque) {
+            Boolean controlaEstoque,
+            /** Preço com desconto (menor que o de venda); nulo = sem promoção. */
+            @DecimalMin(value = "0", inclusive = false) @Digits(integer = 12, fraction = 2) BigDecimal precoPromocional,
+            /** Último dia da promoção (inclusive); nulo = sem prazo. */
+            LocalDate promocaoAte,
+            /** "Sugestão da casa" em destaque no cardápio. */
+            Boolean destaqueCardapio) {
 
         public boolean controlarEstoque() {
             return controlaEstoque == null || controlaEstoque;
@@ -70,7 +77,10 @@ public final class ProdutoDto {
             boolean vendeNoCardapio,
             boolean ativo,
             List<EmbalagemResponse> embalagens,
-            boolean controlaEstoque) {
+            boolean controlaEstoque,
+            BigDecimal precoPromocional,
+            LocalDate promocaoAte,
+            boolean destaqueCardapio) {
 
         public static Response of(Produto p, BigDecimal estoqueAtual) {
             BigDecimal estoque = estoqueAtual == null ? BigDecimal.ZERO : estoqueAtual;
@@ -83,7 +93,7 @@ public final class ProdutoDto {
                     p.margemBrutaPercentual().orElse(null), estoque, p.getEstoqueMinimo(), abaixo,
                     p.getFornecedorPrincipalId(), p.getCodigoInterno(), p.getImagemUrl(), p.isVendeNoCardapio(),
                     p.isAtivo(), p.getEmbalagens().stream().map(EmbalagemResponse::of).toList(),
-                    p.isControlaEstoque());
+                    p.isControlaEstoque(), p.getPrecoPromocional(), p.getPromocaoAte(), p.isDestaqueCardapio());
         }
     }
 

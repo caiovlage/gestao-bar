@@ -39,6 +39,9 @@ public class VendaConsultaService {
     public List<VendaDto.ItemCatalogo> catalogo() {
         return jdbc.sql("""
                         SELECT p.id, p.nome, p.preco_venda, p.imagem_url, p.codigo_interno, p.controla_estoque,
+                               (p.preco_promocional IS NOT NULL AND p.preco_promocional < p.preco_venda
+                                AND (p.promocao_ate IS NULL OR p.promocao_ate >= :hoje)) AS em_promocao,
+                               p.preco_promocional,
                                c.id AS categoria_id, c.nome AS categoria, u.sigla,
                                e.quantidade - e.quantidade_reservada AS disponivel
                         FROM produto p
@@ -48,12 +51,15 @@ public class VendaConsultaService {
                         WHERE p.ativo AND p.tipo <> 'INGREDIENTE' AND p.preco_venda IS NOT NULL
                         ORDER BY coalesce(c.ordem, 9999), lower(coalesce(c.nome, '')), lower(p.nome)
                         """)
+                .param("hoje", LocalDate.now(fuso))
                 .query((rs, n) -> {
                     boolean controla = rs.getBoolean("controla_estoque");
+                    boolean promocao = rs.getBoolean("em_promocao");
                     return new VendaDto.ItemCatalogo(rs.getObject("id", UUID.class), rs.getString("nome"),
-                            rs.getBigDecimal("preco_venda"), rs.getObject("categoria_id", UUID.class),
+                            promocao ? rs.getBigDecimal("preco_promocional") : rs.getBigDecimal("preco_venda"), rs.getObject("categoria_id", UUID.class),
                             rs.getString("categoria"), rs.getString("imagem_url"), rs.getString("codigo_interno"),
-                            controla, controla ? rs.getBigDecimal("disponivel") : null, rs.getString("sigla"));
+                            controla, controla ? rs.getBigDecimal("disponivel") : null, rs.getString("sigla"),
+                            promocao ? rs.getBigDecimal("preco_venda") : null);
                 })
                 .list();
     }

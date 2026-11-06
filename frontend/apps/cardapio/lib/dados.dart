@@ -13,22 +13,52 @@ final api = ApiClient(baseUrl: _apiUrlInformada.isNotEmpty ? _apiUrlInformada : 
 // =============================================================================
 
 class ProdutoCardapio {
-  const ProdutoCardapio(this.id, this.nome, this.descricao, this.preco, this.imagemUrl, this.esgotado);
+  const ProdutoCardapio({
+    required this.id,
+    required this.nome,
+    this.descricao,
+    required this.preco,
+    this.precoOriginal,
+    this.imagemUrl,
+    required this.esgotado,
+    required this.sugestao,
+    required this.categoriaId,
+    required this.categoria,
+  });
 
   final String id;
   final String nome;
   final String? descricao;
+
+  /// Preço cobrado hoje (já com o desconto da promoção, se houver).
   final num preco;
+
+  /// Preço normal, presente só durante a promoção.
+  final num? precoOriginal;
   final String? imagemUrl;
   final bool esgotado;
 
-  factory ProdutoCardapio.fromJson(Map<String, dynamic> j) => ProdutoCardapio(
-        j['id'] as String,
-        j['nome'] as String,
-        j['descricao'] as String?,
-        numDoJson(j['preco']) ?? 0,
-        api.urlImagem(j['imagemUrl'] as String?),
-        j['esgotado'] as bool? ?? false,
+  /// "Sugestão da casa".
+  final bool sugestao;
+  final String categoriaId;
+  final String categoria;
+
+  bool get emPromocao => precoOriginal != null && precoOriginal! > preco;
+
+  /// Desconto arredondado em % (ex.: 20).
+  int get descontoPercentual => emPromocao ? ((1 - preco / precoOriginal!) * 100).round() : 0;
+
+  factory ProdutoCardapio.fromJson(Map<String, dynamic> j, String categoriaId, String categoria) => ProdutoCardapio(
+        id: j['id'] as String,
+        nome: j['nome'] as String,
+        descricao: j['descricao'] as String?,
+        preco: numDoJson(j['preco']) ?? 0,
+        precoOriginal: numDoJson(j['precoOriginal']),
+        imagemUrl: api.urlImagem(j['imagemUrl'] as String?),
+        esgotado: j['esgotado'] as bool? ?? false,
+        sugestao: j['destaque'] as bool? ?? false,
+        categoriaId: categoriaId,
+        categoria: categoria,
       );
 }
 
@@ -39,25 +69,61 @@ class CategoriaCardapio {
   final String nome;
   final List<ProdutoCardapio> produtos;
 
-  factory CategoriaCardapio.fromJson(Map<String, dynamic> j) => CategoriaCardapio(
-        j['id'] as String,
-        j['nome'] as String,
-        (j['produtos'] as List).map((e) => ProdutoCardapio.fromJson(e as Map<String, dynamic>)).toList(),
-      );
+  factory CategoriaCardapio.fromJson(Map<String, dynamic> j) {
+    final id = j['id'] as String;
+    final nome = j['nome'] as String;
+    return CategoriaCardapio(
+      id,
+      nome,
+      (j['produtos'] as List).map((e) => ProdutoCardapio.fromJson(e as Map<String, dynamic>, id, nome)).toList(),
+    );
+  }
+}
+
+/// Seção de destaque da vitrine (configurada no painel): sugestões, promoções, mais pedidos…
+class SecaoDestaque {
+  const SecaoDestaque(this.tipo, this.titulo, this.produtos);
+
+  final String tipo;
+  final String titulo;
+  final List<ProdutoCardapio> produtos;
 }
 
 class Cardapio {
-  const Cardapio(this.nomeBar, this.aberto, this.categorias);
+  const Cardapio(this.nomeBar, this.aberto, this.categorias, this.destaques);
 
   final String nomeBar;
   final bool aberto;
   final List<CategoriaCardapio> categorias;
+  final List<SecaoDestaque> destaques;
 
-  factory Cardapio.fromJson(Map<String, dynamic> j) => Cardapio(
-        j['nomeBar'] as String,
-        j['aberto'] as bool,
-        (j['categorias'] as List).map((e) => CategoriaCardapio.fromJson(e as Map<String, dynamic>)).toList(),
-      );
+  Iterable<ProdutoCardapio> get produtos => categorias.expand((c) => c.produtos);
+
+  /// Ids da seção "mais pedidos", para a etiqueta nos cartões.
+  Set<String> get maisPedidos =>
+      {for (final s in destaques.where((s) => s.tipo == 'MAIS_PEDIDOS')) ...s.produtos.map((p) => p.id)};
+
+  bool get temPromocoes => produtos.any((p) => p.emPromocao);
+
+  factory Cardapio.fromJson(Map<String, dynamic> j) {
+    final categorias =
+        (j['categorias'] as List).map((e) => CategoriaCardapio.fromJson(e as Map<String, dynamic>)).toList();
+    final porId = {for (final p in categorias.expand((c) => c.produtos)) p.id: p};
+    final destaques = <SecaoDestaque>[
+      for (final s in ((j['destaques'] as List?) ?? const []).cast<Map<String, dynamic>>())
+        SecaoDestaque(
+          s['tipo'] as String,
+          s['titulo'] as String,
+          [for (final id in (s['produtos'] as List).cast<String>()) ?porId[id]],
+        ),
+    ];
+    return Cardapio(
+      j['nomeBar'] as String,
+      j['aberto'] as bool,
+      categorias,
+      destaques.where((s) => s.produtos.isNotEmpty).toList(),
+    );
+  }
 }
 
 enum EtapaPedido {

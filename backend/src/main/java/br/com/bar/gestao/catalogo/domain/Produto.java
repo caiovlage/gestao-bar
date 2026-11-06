@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -68,6 +69,17 @@ public class Produto extends BaseEntity {
 
     @Column(name = "vende_no_cardapio", nullable = false)
     private boolean vendeNoCardapio;
+
+    /** Preço com desconto, menor que o de venda; vale até {@code promocaoAte} (inclusive) ou sem prazo. */
+    @Column(name = "preco_promocional", precision = 14, scale = 2)
+    private BigDecimal precoPromocional;
+
+    @Column(name = "promocao_ate")
+    private LocalDate promocaoAte;
+
+    /** "Sugestão da casa": aparece em destaque no topo do cardápio. */
+    @Column(name = "destaque_cardapio", nullable = false)
+    private boolean destaqueCardapio;
 
     @Column(nullable = false)
     private boolean ativo = true;
@@ -138,6 +150,35 @@ public class Produto extends BaseEntity {
         return Optional.of(precoVenda.subtract(custoMedio)
                 .multiply(BigDecimal.valueOf(100))
                 .divide(precoVenda, 2, RoundingMode.HALF_UP));
+    }
+
+    public void definirDestaques(BigDecimal precoPromocional, LocalDate promocaoAte, boolean destaqueCardapio) {
+        this.precoPromocional = precoPromocional;
+        this.promocaoAte = precoPromocional == null ? null : promocaoAte;
+        this.destaqueCardapio = destaqueCardapio;
+    }
+
+    /** Promoção válida no dia informado (no fuso do bar). */
+    public boolean emPromocao(LocalDate hoje) {
+        return precoVenda != null && precoPromocional != null && precoPromocional.compareTo(precoVenda) < 0
+                && (promocaoAte == null || !promocaoAte.isBefore(hoje));
+    }
+
+    /** Preço cobrado hoje: o promocional, se a promoção estiver valendo; senão o de venda. */
+    public BigDecimal precoVigente(LocalDate hoje) {
+        return emPromocao(hoje) ? precoPromocional : precoVenda;
+    }
+
+    public BigDecimal getPrecoPromocional() {
+        return precoPromocional;
+    }
+
+    public LocalDate getPromocaoAte() {
+        return promocaoAte;
+    }
+
+    public boolean isDestaqueCardapio() {
+        return destaqueCardapio;
     }
 
     public void definirControleEstoque(boolean controlaEstoque) {

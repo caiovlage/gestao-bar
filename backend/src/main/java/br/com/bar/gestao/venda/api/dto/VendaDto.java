@@ -88,9 +88,13 @@ public final class VendaDto {
                          FormaPagamento formaPagamento, Venda.Status status, int quantidadeItens, String itens) {
     }
 
-    /** Produto disponível no PDV. {@code disponivel} é nulo para produtos sem controle de estoque. */
+    /**
+     * Produto disponível no PDV. {@code precoVenda} é o preço cobrado hoje (promocional, se houver);
+     * {@code precoNormal} só vem preenchido durante a promoção. {@code disponivel} é nulo para
+     * produtos sem controle de estoque.
+     */
     public record ItemCatalogo(UUID produtoId, String nome, BigDecimal precoVenda, UUID categoriaId, String categoria,
                                String imagemUrl, String codigoInterno, boolean controlaEstoque, BigDecimal disponivel,
-                               String unidadeSigla) {
+                               String unidadeSigla, BigDecimal precoNormal) {
     }
 }

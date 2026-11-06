@@ -266,12 +266,24 @@ class _CartaoProduto extends ConsumerWidget {
                   Text(p.nome, maxLines: 2, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w600, height: 1.2)),
                   const SizedBox(height: 4),
-                  Text(formatarMoeda(p.precoVenda),
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppCores.ambarEscuro)),
+                  Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Text(formatarMoeda(p.precoVenda),
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppCores.ambarEscuro)),
+                    if (p.precoNormal != null)
+                      Text(formatarMoeda(p.precoNormal),
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600, decoration: TextDecoration.lineThrough)),
+                  ]),
                   if (p.esgotado) const Text('sem estoque', style: TextStyle(fontSize: 11, color: AppCores.perigo)),
                 ]),
               ),
             ]),
+            if (p.precoNormal != null)
+              const Positioned(
+                top: 6,
+                left: 6,
+                child: Etiqueta('PROMO', cor: AppCores.sucesso, icone: Icons.local_offer),
+              ),
             if (quantidade > 0)
               Positioned(
                 top: 6,

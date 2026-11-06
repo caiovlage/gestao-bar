@@ -36,6 +36,7 @@ class ItemCatalogo {
     required this.controlaEstoque,
     this.disponivel,
     required this.unidadeSigla,
+    this.precoNormal,
   });
 
   final String produtoId;
@@ -51,6 +52,9 @@ class ItemCatalogo {
   final num? disponivel;
   final String unidadeSigla;
 
+  /// Preço sem desconto: preenchido só durante a promoção ([precoVenda] já é o promocional).
+  final num? precoNormal;
+
   bool get esgotado => controlaEstoque && (disponivel ?? 0) <= 0;
 
   factory ItemCatalogo.fromJson(Map<String, dynamic> j) => ItemCatalogo(
@@ -64,6 +68,7 @@ class ItemCatalogo {
         controlaEstoque: j['controlaEstoque'] as bool,
         disponivel: numDoJson(j['disponivel']),
         unidadeSigla: j['unidadeSigla'] as String,
+        precoNormal: numDoJson(j['precoNormal']),
       );
 }
 

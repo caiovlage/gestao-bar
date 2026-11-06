@@ -1,10 +1,39 @@
-import 'package:core/core.dart';
+import 'dart:math' as math;
+
+import 'package:core/core.dart' show formatarMoeda, mensagemDeErro;
 import 'package:flutter/material.dart';
 
 import 'dados.dart';
 import 'pedido_page.dart';
+import 'tema.dart';
 
-const _corTextoSuave = Color(0xFFB8AC9C);
+/// Filtro rápido do topo: tudo, só promoções ou uma categoria.
+sealed class _Filtro {
+  const _Filtro();
+}
+
+class _Tudo extends _Filtro {
+  const _Tudo();
+}
+
+class _Promocoes extends _Filtro {
+  const _Promocoes();
+}
+
+class _Categoria extends _Filtro {
+  const _Categoria(this.id);
+  final String id;
+}
+
+enum _Ordem {
+  relevancia('Sugestão do bar'),
+  menorPreco('Menor preço'),
+  maiorPreco('Maior preço'),
+  nome('Nome (A–Z)');
+
+  const _Ordem(this.rotulo);
+  final String rotulo;
+}
 
 class CardapioPage extends StatefulWidget {
   const CardapioPage({super.key});
@@ -16,19 +45,22 @@ class CardapioPage extends StatefulWidget {
 class _CardapioPageState extends State<CardapioPage> {
   final _carrinho = Carrinho();
   late Future<Cardapio> _cardapio = buscarCardapio();
-  final _secoes = <String, GlobalKey>{};
-  String? _categoriaAtiva;
+  final _busca = TextEditingController();
+  _Filtro _filtro = const _Tudo();
+  _Ordem _ordem = _Ordem.relevancia;
   List<Acompanhamento> _meusPedidos = const [];
 
   @override
   void initState() {
     super.initState();
     _carregarMeusPedidos();
+    _busca.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _carrinho.dispose();
+    _busca.dispose();
     super.dispose();
   }
 
@@ -49,18 +81,12 @@ class _CardapioPageState extends State<CardapioPage> {
 
   void _recarregar() => setState(() => _cardapio = buscarCardapio());
 
-  void _irPara(String categoriaId) {
-    setState(() => _categoriaAtiva = categoriaId);
-    final contexto = _secoes[categoriaId]?.currentContext;
-    if (contexto != null) {
-      Scrollable.ensureVisible(contexto, duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
-    }
-  }
-
   Future<void> _abrirProduto(ProdutoCardapio p, bool aberto) async {
+    if (p.esgotado) return;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _ProdutoSheet(produto: p, carrinho: _carrinho, aberto: aberto),
     );
   }
@@ -69,6 +95,7 @@ class _CardapioPageState extends State<CardapioPage> {
     final pedido = await showModalBottomSheet<Acompanhamento>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _CarrinhoSheet(carrinho: _carrinho),
     );
     if (pedido == null || !mounted) return;
@@ -76,6 +103,47 @@ class _CardapioPageState extends State<CardapioPage> {
     _carregarMeusPedidos();
     _recarregar();
   }
+
+  Future<void> _acompanhar(Acompanhamento p) async {
+    await Navigator.of(context).pushNamed(rotaPedido(p.id), arguments: p);
+    _carregarMeusPedidos();
+  }
+
+  /// Busca e filtros ativos: mostra a lista filtrada em vez da vitrine.
+  bool get _filtrando => _busca.text.trim().isNotEmpty || _filtro is! _Tudo || _ordem != _Ordem.relevancia;
+
+  List<ProdutoCardapio> _filtrados(Cardapio c) {
+    final termo = _semAcento(_busca.text.trim().toLowerCase());
+    var lista = c.produtos.where((p) {
+      final passaFiltro = switch (_filtro) {
+        _Tudo() => true,
+        _Promocoes() => p.emPromocao,
+        _Categoria(:final id) => p.categoriaId == id,
+      };
+      if (!passaFiltro) return false;
+      if (termo.isEmpty) return true;
+      return _semAcento('${p.nome} ${p.descricao ?? ''} ${p.categoria}'.toLowerCase()).contains(termo);
+    }).toList();
+    switch (_ordem) {
+      case _Ordem.relevancia:
+        break;
+      case _Ordem.menorPreco:
+        lista.sort((a, b) => a.preco.compareTo(b.preco));
+      case _Ordem.maiorPreco:
+        lista.sort((a, b) => b.preco.compareTo(a.preco));
+      case _Ordem.nome:
+        lista.sort((a, b) => _semAcento(a.nome.toLowerCase()).compareTo(_semAcento(b.nome.toLowerCase())));
+    }
+    // Esgotados sempre no fim
+    lista = [...lista.where((p) => !p.esgotado), ...lista.where((p) => p.esgotado)];
+    return lista;
+  }
+
+  void _limparFiltros() => setState(() {
+        _busca.clear();
+        _filtro = const _Tudo();
+        _ordem = _Ordem.relevancia;
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +159,12 @@ class _CardapioPageState extends State<CardapioPage> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.wifi_off, size: 48, color: _corTextoSuave),
+                  const Icon(Icons.wifi_off, size: 48, color: Paleta.textoSuave),
                   const SizedBox(height: 12),
                   Text(mensagemDeErro(snap.error!), textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(onPressed: _recarregar, icon: const Icon(Icons.refresh), label: const Text('Tentar novamente')),
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                      onPressed: _recarregar, icon: const Icon(Icons.refresh), label: const Text('Tentar novamente')),
                 ]),
               ),
             ),
@@ -107,102 +176,97 @@ class _CardapioPageState extends State<CardapioPage> {
   }
 
   Widget _conteudo(Cardapio c) {
-    final tema = Theme.of(context);
     final local = localDoQrCode();
-    for (final cat in c.categorias) {
-      _secoes.putIfAbsent(cat.id, GlobalKey.new);
-    }
+    final maisPedidos = c.maisPedidos;
+    final largura = MediaQuery.sizeOf(context).width;
+    final margem = largura > 760 ? (largura - 720) / 2 : 16.0;
+
+    Widget cartao(ProdutoCardapio p) => _LinhaProduto(
+          produto: p,
+          carrinho: _carrinho,
+          maisPedido: maisPedidos.contains(p.id),
+          aoTocar: () => _abrirProduto(p, c.aberto),
+        );
 
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 20,
-        toolbarHeight: 72,
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(c.nomeBar, style: tema.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-          Text(local == null ? 'Cardápio' : 'Cardápio · $local',
-              style: tema.textTheme.bodySmall?.copyWith(color: AppCores.ambar)),
-        ]),
-        actions: [
-          IconButton(tooltip: 'Atualizar', onPressed: _recarregar, icon: const Icon(Icons.refresh)),
-          const SizedBox(width: 8),
-        ],
-        bottom: c.categorias.length < 2
-            ? null
-            : PreferredSize(
-                preferredSize: const Size.fromHeight(52),
-                child: SizedBox(
-                  height: 52,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                    children: [
-                      for (final cat in c.categorias)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(cat.nome),
-                            selected: _categoriaAtiva == cat.id,
-                            showCheckmark: false,
-                            labelStyle: TextStyle(
-                              color: _categoriaAtiva == cat.id ? AppCores.sobreAmbar : null,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            onSelected: (_) => _irPara(cat.id),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-      ),
       body: RefreshIndicator(
+        color: Paleta.ouro,
         onRefresh: () async {
           _recarregar();
           await _carregarMeusPedidos();
         },
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                for (final p in _meusPedidos) _AvisoPedido(pedido: p, aoAbrir: () async {
-                  await Navigator.of(context).pushNamed(rotaPedido(p.id), arguments: p);
-                  _carregarMeusPedidos();
-                }),
+          slivers: [
+            _Cabecalho(nomeBar: c.nomeBar, local: local, aoAtualizar: _recarregar),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _BarraFiltros(
+                busca: _busca,
+                filtro: _filtro,
+                ordem: _ordem,
+                cardapio: c,
+                margem: margem,
+                aoFiltrar: (f) => setState(() => _filtro = f),
+                aoOrdenar: (o) => setState(() => _ordem = o),
+              ),
+            ),
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(margem, 4, margem, 0),
+              sliver: SliverList.list(children: [
+                for (final p in _meusPedidos) _AvisoPedido(pedido: p, aoAbrir: () => _acompanhar(p)),
                 if (!c.aberto)
                   const _Aviso(
-                    icone: Icons.schedule,
+                    icone: Icons.nightlife_outlined,
                     texto: 'No momento não estamos recebendo pedidos pelo cardápio. Chame um atendente.',
                   ),
-                if (c.categorias.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 80),
-                    child: Text('O cardápio ainda está sendo montado.',
-                        textAlign: TextAlign.center, style: TextStyle(color: _corTextoSuave)),
-                  ),
-                for (final cat in c.categorias) ...[
-                  Padding(
-                    key: _secoes[cat.id],
-                    padding: const EdgeInsets.only(top: 20, bottom: 10),
-                    child: Text(cat.nome, style: tema.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                  ),
-                  for (final p in cat.produtos) ...[
-                    ListenableBuilder(
-                      listenable: _carrinho,
-                      builder: (_, _) => _CartaoProduto(
-                        produto: p,
-                        noCarrinho: _carrinho.quantidadeDe(p.id),
-                        aoTocar: () => _abrirProduto(p, c.aberto),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ],
               ]),
             ),
-          ),
+            if (c.categorias.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text('O cardápio ainda está sendo montado.', style: TextStyle(color: Paleta.textoSuave)),
+                ),
+              )
+            else if (_filtrando)
+              ..._resultados(c, margem, cartao)
+            else ...[
+              for (final (i, secao) in c.destaques.indexed)
+                SliverToBoxAdapter(
+                  child: i == 0
+                      ? _VitrinePrincipal(
+                          secao: secao,
+                          margem: margem,
+                          maisPedidos: maisPedidos,
+                          aoTocar: (p) => _abrirProduto(p, c.aberto),
+                        )
+                      : _VitrineHorizontal(
+                          secao: secao,
+                          margem: margem,
+                          maisPedidos: maisPedidos,
+                          aoTocar: (p) => _abrirProduto(p, c.aberto),
+                        ),
+                ),
+              for (final cat in c.categorias) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(margem, 32, margem, 6),
+                    child: _TituloSecao(cat.nome, quantidade: cat.produtos.length),
+                  ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: margem),
+                  sliver: SliverList.separated(
+                    itemCount: cat.produtos.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (_, i) => cartao(cat.produtos[i]),
+                  ),
+                ),
+              ],
+            ],
+            const SliverToBoxAdapter(child: _Rodape()),
+          ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -210,27 +274,871 @@ class _CardapioPageState extends State<CardapioPage> {
         listenable: _carrinho,
         builder: (_, _) => _carrinho.vazio
             ? const SizedBox.shrink()
-            : ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
+            : _BotaoCarrinho(carrinho: _carrinho, aoTocar: _abrirCarrinho),
+      ),
+    );
+  }
+
+  List<Widget> _resultados(Cardapio c, double margem, Widget Function(ProdutoCardapio) cartao) {
+    final lista = _filtrados(c);
+    final titulo = switch (_filtro) {
+      _Promocoes() => 'Promoções',
+      _Categoria(:final id) => c.categorias.where((k) => k.id == id).firstOrNull?.nome ?? 'Resultados',
+      _Tudo() => _busca.text.trim().isEmpty ? 'Todos os itens' : 'Resultados',
+    };
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(margem, 20, margem, 6),
+          child: Row(children: [
+            Expanded(child: _TituloSecao(titulo, quantidade: lista.length)),
+            TextButton(onPressed: _limparFiltros, child: const Text('Limpar')),
+          ]),
+        ),
+      ),
+      if (lista.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
+            child: Column(children: [
+              const Icon(Icons.search_off, size: 44, color: Paleta.textoSuave),
+              const SizedBox(height: 12),
+              Text('Nada encontrado${_busca.text.trim().isEmpty ? '' : ' para "${_busca.text.trim()}"'}.',
+                  textAlign: TextAlign.center, style: const TextStyle(color: Paleta.textoSuave)),
+            ]),
+          ),
+        )
+      else
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: margem),
+          sliver: SliverList.separated(
+            itemCount: lista.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (_, i) => cartao(lista[i]),
+          ),
+        ),
+    ];
+  }
+}
+
+String _semAcento(String texto) {
+  const de = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+  const para = 'aaaaaeeeeiiiiooooouuuucn';
+  final b = StringBuffer();
+  for (final r in texto.runes) {
+    final ch = String.fromCharCode(r);
+    final i = de.indexOf(ch);
+    b.write(i >= 0 ? para[i] : ch);
+  }
+  return b.toString();
+}
+
+// =============================================================================
+// Cabeçalho
+// =============================================================================
+
+class _Cabecalho extends StatelessWidget {
+  const _Cabecalho({required this.nomeBar, required this.local, required this.aoAtualizar});
+
+  final String nomeBar;
+  final String? local;
+  final VoidCallback aoAtualizar;
+
+  static const _alturaAberta = 236.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      expandedHeight: _alturaAberta,
+      backgroundColor: Paleta.fundo,
+      surfaceTintColor: Colors.transparent,
+      actions: [
+        IconButton(
+            tooltip: 'Atualizar', onPressed: aoAtualizar, icon: const Icon(Icons.refresh, color: Paleta.textoSuave)),
+      ],
+      flexibleSpace: LayoutBuilder(builder: (context, c) {
+        final topo = MediaQuery.paddingOf(context).top;
+        // 1 = totalmente aberto, 0 = recolhido
+        final aberto = ((c.maxHeight - kToolbarHeight - topo) / (_alturaAberta - kToolbarHeight)).clamp(0.0, 1.0);
+        return Stack(fit: StackFit.expand, children: [
+          // brilho dourado suave, como luz baixa de balcão
+          Opacity(
+            opacity: aberto,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.5),
+                  radius: 1.1,
+                  colors: [Color(0x40D4AF6A), Color(0x10D4AF6A), Paleta.fundo],
+                  stops: [0, 0.45, 1],
+                ),
+              ),
+            ),
+          ),
+          if (aberto > 0.05)
+            Opacity(
+              opacity: Curves.easeIn.transform(aberto),
+              child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: FilledButton(
-                    onPressed: _abrirCarrinho,
-                    style: FilledButton.styleFrom(minimumSize: const Size(double.infinity, 58)),
-                    child: Row(children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: AppCores.sobreAmbar,
-                        child: Text('${_carrinho.quantidade}',
-                            style: const TextStyle(color: AppCores.ambar, fontSize: 13, fontWeight: FontWeight.w800)),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(child: Text('Ver pedido')),
-                      Text(formatarMoeda(_carrinho.total)),
-                    ]),
+                  padding: const EdgeInsets.fromLTRB(24, 36, 24, 12),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('BEM-VINDO AO', style: rotuloEspacado(cor: Paleta.textoSuave)),
+                    const SizedBox(height: 8),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(nomeBar, textAlign: TextAlign.center, style: serifa(40, altura: 1.05)),
+                    ),
+                    const SizedBox(height: 12),
+                    const _Ornamento(),
+                    const SizedBox(height: 12),
+                    if (local != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Paleta.ouroEscuro),
+                        ),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.table_bar_outlined, size: 16, color: Paleta.ouro),
+                          const SizedBox(width: 6),
+                          Text(local!, style: const TextStyle(color: Paleta.ouroClaro, fontWeight: FontWeight.w600)),
+                        ]),
+                      )
+                    else
+                      Text('Cardápio', style: serifa(16, peso: FontWeight.w400, cor: Paleta.textoSuave)),
+                  ]),
+                ),
+              ),
+            ),
+          // nome compacto quando recolhido
+          Positioned(
+            left: 56,
+            right: 56,
+            bottom: 0,
+            height: kToolbarHeight,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: (1 - aberto * 2).clamp(0.0, 1.0),
+                child: Center(
+                  child: Text(nomeBar, maxLines: 1, overflow: TextOverflow.ellipsis, style: serifa(20)),
+                ),
+              ),
+            ),
+          ),
+        ]);
+      }),
+    );
+  }
+}
+
+class _Ornamento extends StatelessWidget {
+  const _Ornamento();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget linha() => Container(
+          width: 48,
+          height: 1,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.transparent, Paleta.ouro, Colors.transparent]),
+          ),
+        );
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      linha(),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        child: Icon(Icons.local_bar, size: 16, color: Paleta.ouro),
+      ),
+      linha(),
+    ]);
+  }
+}
+
+class _TituloSecao extends StatelessWidget {
+  const _TituloSecao(this.titulo, {this.quantidade, this.subtitulo});
+
+  final String titulo;
+  final int? quantidade;
+  final String? subtitulo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+        Flexible(child: Text(titulo, style: serifa(26))),
+        if (quantidade != null) ...[
+          const SizedBox(width: 10),
+          Text('$quantidade ${quantidade == 1 ? 'item' : 'itens'}',
+              style: const TextStyle(color: Paleta.textoSuave, fontSize: 13)),
+        ],
+      ]),
+      const SizedBox(height: 6),
+      Container(width: 36, height: 2, color: Paleta.ouro),
+      if (subtitulo != null) ...[
+        const SizedBox(height: 8),
+        Text(subtitulo!, style: const TextStyle(color: Paleta.textoSuave, fontSize: 13)),
+      ],
+    ]);
+  }
+}
+
+// =============================================================================
+// Busca e filtros (fixos no topo ao rolar)
+// =============================================================================
+
+class _BarraFiltros extends SliverPersistentHeaderDelegate {
+  _BarraFiltros({
+    required this.busca,
+    required this.filtro,
+    required this.ordem,
+    required this.cardapio,
+    required this.margem,
+    required this.aoFiltrar,
+    required this.aoOrdenar,
+  });
+
+  final TextEditingController busca;
+  final _Filtro filtro;
+  final _Ordem ordem;
+  final Cardapio cardapio;
+  final double margem;
+  final ValueChanged<_Filtro> aoFiltrar;
+  final ValueChanged<_Ordem> aoOrdenar;
+
+  static const _altura = 118.0;
+
+  @override
+  double get minExtent => _altura;
+
+  @override
+  double get maxExtent => _altura;
+
+  // Recriado a cada setState da página (busca, filtro, ordem): sempre redesenha.
+  @override
+  bool shouldRebuild(covariant _BarraFiltros antigo) => true;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    Widget chip(String rotulo, _Filtro f, {IconData? icone}) {
+      final selecionado = switch ((filtro, f)) {
+        (_Tudo(), _Tudo()) => true,
+        (_Promocoes(), _Promocoes()) => true,
+        (_Categoria(id: final a), _Categoria(id: final b)) => a == b,
+        _ => false,
+      };
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          avatar: icone == null
+              ? null
+              : Icon(icone, size: 16, color: selecionado ? Paleta.fundo : Paleta.promocao),
+          label: Text(rotulo),
+          selected: selecionado,
+          labelStyle: TextStyle(
+            color: selecionado ? Paleta.fundo : Paleta.texto,
+            fontWeight: selecionado ? FontWeight.w700 : FontWeight.w500,
+          ),
+          onSelected: (_) => aoFiltrar(selecionado && f is! _Tudo ? const _Tudo() : f),
+        ),
+      );
+    }
+
+    return Container(
+      color: Paleta.fundo.withValues(alpha: 0.97),
+      child: Column(children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(margem, 8, margem, 8),
+          child: Row(children: [
+            Expanded(
+              child: SizedBox(
+                height: 46,
+                child: TextField(
+                  controller: busca,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar no cardápio',
+                    prefixIcon: const Icon(Icons.search, color: Paleta.textoSuave),
+                    suffixIcon: busca.text.isEmpty
+                        ? null
+                        : IconButton(onPressed: busca.clear, icon: const Icon(Icons.close, size: 18)),
+                    contentPadding: EdgeInsets.zero,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Paleta.linha),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Paleta.linha),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Paleta.ouro),
+                    ),
                   ),
                 ),
               ),
+            ),
+            const SizedBox(width: 8),
+            PopupMenuButton<_Ordem>(
+              tooltip: 'Ordenar',
+              initialValue: ordem,
+              color: Paleta.superficieAlta,
+              onSelected: aoOrdenar,
+              itemBuilder: (_) => [
+                for (final o in _Ordem.values)
+                  PopupMenuItem(
+                    value: o,
+                    child: Row(children: [
+                      Icon(o == ordem ? Icons.radio_button_checked : Icons.radio_button_off,
+                          size: 18, color: Paleta.ouro),
+                      const SizedBox(width: 10),
+                      Text(o.rotulo),
+                    ]),
+                  ),
+              ],
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ordem == _Ordem.relevancia ? Paleta.superficieAlta : Paleta.ouro,
+                  border: Border.all(color: Paleta.linha),
+                ),
+                child: Icon(Icons.tune, color: ordem == _Ordem.relevancia ? Paleta.texto : Paleta.fundo),
+              ),
+            ),
+          ]),
+        ),
+        SizedBox(
+          height: 46,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.fromLTRB(margem, 0, margem, 8),
+            children: [
+              chip('Tudo', const _Tudo()),
+              if (cardapio.temPromocoes) chip('Promoções', const _Promocoes(), icone: Icons.local_offer),
+              for (final cat in cardapio.categorias) chip(cat.nome, _Categoria(cat.id)),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+      ]),
+    );
+  }
+}
+
+// =============================================================================
+// Vitrine (destaques configurados no painel)
+// =============================================================================
+
+String _subtituloSecao(String tipo) => switch (tipo) {
+      'SUGESTOES' => 'Escolhidos a dedo pela casa',
+      'PROMOCOES' => 'Por tempo limitado',
+      'MAIS_PEDIDOS' => 'Os favoritos dos nossos clientes',
+      'MENOS_PEDIDOS' => 'Joias escondidas que valem a prova',
+      'NOVIDADES' => 'Acabaram de chegar',
+      _ => '',
+    };
+
+/// Primeira seção: carrossel grande, cartões com foto inteira.
+class _VitrinePrincipal extends StatefulWidget {
+  const _VitrinePrincipal({required this.secao, required this.margem, required this.maisPedidos, required this.aoTocar});
+
+  final SecaoDestaque secao;
+  final double margem;
+  final Set<String> maisPedidos;
+  final ValueChanged<ProdutoCardapio> aoTocar;
+
+  @override
+  State<_VitrinePrincipal> createState() => _VitrinePrincipalState();
+}
+
+class _VitrinePrincipalState extends State<_VitrinePrincipal> {
+  late final _paginas = PageController(viewportFraction: 0.86);
+  int _atual = 0;
+
+  @override
+  void dispose() {
+    _paginas.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.secao;
+    final largura = math.min(MediaQuery.sizeOf(context).width, 760.0);
+    final altura = math.min(largura * 0.95, 380.0);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: widget.margem),
+          child: _TituloSecao(s.titulo, subtitulo: _subtituloSecao(s.tipo)),
+        ),
+        const SizedBox(height: 14),
+        Center(
+          child: SizedBox(
+            width: largura,
+            height: altura,
+            child: PageView.builder(
+              controller: _paginas,
+              itemCount: s.produtos.length,
+              onPageChanged: (i) => setState(() => _atual = i),
+              itemBuilder: (_, i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _CartaoDestaque(
+                  produto: s.produtos[i],
+                  grande: true,
+                  posicao: s.tipo == 'MAIS_PEDIDOS' ? i + 1 : null,
+                  maisPedido: widget.maisPedidos.contains(s.produtos[i].id),
+                  aoTocar: () => widget.aoTocar(s.produtos[i]),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (s.produtos.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              for (var i = 0; i < s.produtos.length; i++)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _atual ? 20 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == _atual ? Paleta.ouro : Paleta.linha,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+            ]),
+          ),
+      ]),
+    );
+  }
+}
+
+/// Demais seções: faixa horizontal de cartões médios.
+class _VitrineHorizontal extends StatelessWidget {
+  const _VitrineHorizontal({required this.secao, required this.margem, required this.maisPedidos, required this.aoTocar});
+
+  final SecaoDestaque secao;
+  final double margem;
+  final Set<String> maisPedidos;
+  final ValueChanged<ProdutoCardapio> aoTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = secao;
+    return Padding(
+      padding: const EdgeInsets.only(top: 32),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: margem),
+          child: _TituloSecao(s.titulo, subtitulo: _subtituloSecao(s.tipo)),
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 270,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: margem),
+            itemCount: s.produtos.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (_, i) => SizedBox(
+              width: 196,
+              child: _CartaoDestaque(
+                produto: s.produtos[i],
+                grande: false,
+                posicao: s.tipo == 'MAIS_PEDIDOS' ? i + 1 : null,
+                maisPedido: maisPedidos.contains(s.produtos[i].id),
+                aoTocar: () => aoTocar(s.produtos[i]),
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Cartão com a foto ocupando tudo e o texto sobre um degradê escuro.
+class _CartaoDestaque extends StatelessWidget {
+  const _CartaoDestaque({
+    required this.produto,
+    required this.grande,
+    required this.aoTocar,
+    this.posicao,
+    this.maisPedido = false,
+  });
+
+  final ProdutoCardapio produto;
+  final bool grande;
+  final int? posicao;
+  final bool maisPedido;
+  final VoidCallback aoTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produto;
+    return Opacity(
+      opacity: p.esgotado ? 0.5 : 1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(grande ? 24 : 18),
+        child: Material(
+          color: Paleta.superficie,
+          child: InkWell(
+            onTap: p.esgotado ? null : aoTocar,
+            child: Stack(fit: StackFit.expand, children: [
+              _Foto(url: p.imagemUrl, tamanhoIcone: grande ? 64 : 40),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00000000), Color(0x33000000), Color(0xE60E0C0A)],
+                    stops: [0.35, 0.55, 1],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 12,
+                right: 12,
+                child: Row(children: [
+                  if (posicao != null) _Posicao(posicao!),
+                  const Spacer(),
+                  _Etiquetas(produto: p, maisPedido: maisPedido && posicao == null, compacto: !grande),
+                ]),
+              ),
+              Positioned(
+                left: grande ? 20 : 14,
+                right: grande ? 20 : 14,
+                bottom: grande ? 20 : 14,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(p.nome,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: serifa(grande ? 26 : 18, altura: 1.1)),
+                  if (grande && p.descricao != null && p.descricao!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(p.descricao!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Paleta.textoSuave, fontSize: 13, height: 1.35)),
+                  ],
+                  SizedBox(height: grande ? 12 : 8),
+                  Row(children: [
+                    Expanded(child: _Preco(produto: p, tamanho: grande ? 20 : 16)),
+                    if (!p.esgotado) _BotaoMais(tamanho: grande ? 40 : 32),
+                  ]),
+                ]),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Posicao extends StatelessWidget {
+  const _Posicao(this.numero);
+  final int numero;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Paleta.fundo.withValues(alpha: 0.75),
+        border: Border.all(color: Paleta.ouro),
+      ),
+      child: Text('$numero', style: serifa(16, cor: Paleta.ouro)),
+    );
+  }
+}
+
+// =============================================================================
+// Linha de produto (lista por categoria e resultados)
+// =============================================================================
+
+class _LinhaProduto extends StatelessWidget {
+  const _LinhaProduto({required this.produto, required this.carrinho, required this.maisPedido, required this.aoTocar});
+
+  final ProdutoCardapio produto;
+  final Carrinho carrinho;
+  final bool maisPedido;
+  final VoidCallback aoTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produto;
+    return Opacity(
+      opacity: p.esgotado ? 0.45 : 1,
+      child: InkWell(
+        onTap: p.esgotado ? null : aoTocar,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                _Etiquetas(produto: p, maisPedido: maisPedido, compacto: true, alinharInicio: true),
+                Text(p.nome, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.25)),
+                if (p.descricao != null && p.descricao!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(p.descricao!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Paleta.textoSuave, fontSize: 13.5, height: 1.4)),
+                ],
+                const SizedBox(height: 10),
+                _Preco(produto: p, tamanho: 17),
+              ]),
+            ),
+            const SizedBox(width: 14),
+            SizedBox(
+              width: 104,
+              height: 104,
+              child: Stack(clipBehavior: Clip.none, children: [
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: _Foto(url: p.imagemUrl, tamanhoIcone: 34),
+                  ),
+                ),
+                if (!p.esgotado)
+                  Positioned(
+                    right: -6,
+                    bottom: -6,
+                    child: ListenableBuilder(
+                      listenable: carrinho,
+                      builder: (_, _) {
+                        final qtd = carrinho.quantidadeDe(p.id);
+                        return qtd == 0
+                            ? const _BotaoMais(tamanho: 34)
+                            : Container(
+                                height: 34,
+                                constraints: const BoxConstraints(minWidth: 34),
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Paleta.ouro,
+                                  borderRadius: BorderRadius.circular(17),
+                                  border: Border.all(color: Paleta.fundo, width: 3),
+                                ),
+                                child: Text('$qtd',
+                                    style: const TextStyle(color: Paleta.fundo, fontWeight: FontWeight.w800)),
+                              );
+                      },
+                    ),
+                  ),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Peças pequenas
+// =============================================================================
+
+class _Foto extends StatelessWidget {
+  const _Foto({required this.url, required this.tamanhoIcone});
+
+  final String? url;
+  final double tamanhoIcone;
+
+  @override
+  Widget build(BuildContext context) {
+    final vazio = DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Paleta.superficieAlta, Paleta.superficie],
+        ),
+      ),
+      child: Center(child: Icon(Icons.local_bar_outlined, size: tamanhoIcone, color: Paleta.ouroEscuro)),
+    );
+    if (url == null) return vazio;
+    return Image.network(
+      url!,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => vazio,
+      frameBuilder: (_, child, frame, sincrono) => sincrono
+          ? child
+          : AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: const Duration(milliseconds: 300),
+              child: frame == null ? vazio : child,
+            ),
+    );
+  }
+}
+
+class _Preco extends StatelessWidget {
+  const _Preco({required this.produto, required this.tamanho});
+
+  final ProdutoCardapio produto;
+  final double tamanho;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produto;
+    if (p.esgotado) {
+      return Text('Esgotado', style: TextStyle(color: Paleta.erro, fontWeight: FontWeight.w700, fontSize: tamanho - 3));
+    }
+    return Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+      Text(formatarMoeda(p.preco),
+          style: TextStyle(
+            color: p.emPromocao ? Paleta.promocao : Paleta.ouro,
+            fontWeight: FontWeight.w700,
+            fontSize: tamanho,
+          )),
+      if (p.emPromocao)
+        Text(formatarMoeda(p.precoOriginal),
+            style: TextStyle(
+              color: Paleta.textoSuave,
+              fontSize: tamanho - 4,
+              decoration: TextDecoration.lineThrough,
+              decorationColor: Paleta.textoSuave,
+            )),
+    ]);
+  }
+}
+
+class _Etiquetas extends StatelessWidget {
+  const _Etiquetas({
+    required this.produto,
+    required this.maisPedido,
+    this.compacto = false,
+    this.alinharInicio = false,
+  });
+
+  final ProdutoCardapio produto;
+  final bool maisPedido;
+  final bool compacto;
+  final bool alinharInicio;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produto;
+    final etiquetas = <Widget>[
+      if (p.emPromocao) _Etiqueta('−${p.descontoPercentual}%', cor: Paleta.promocao, cheia: true),
+      if (p.sugestao) _Etiqueta(compacto ? 'Sugestão' : 'Sugestão da casa', cor: Paleta.ouro, icone: Icons.star),
+      if (maisPedido) _Etiqueta('Mais pedido', cor: Paleta.ouroClaro, icone: Icons.local_fire_department),
+    ];
+    if (etiquetas.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(bottom: alinharInicio ? 6 : 0),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        alignment: alinharInicio ? WrapAlignment.start : WrapAlignment.end,
+        children: etiquetas,
+      ),
+    );
+  }
+}
+
+class _Etiqueta extends StatelessWidget {
+  const _Etiqueta(this.texto, {required this.cor, this.icone, this.cheia = false});
+
+  final String texto;
+  final Color cor;
+  final IconData? icone;
+  final bool cheia;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: cheia ? cor : Paleta.fundo.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: cheia ? null : Border.all(color: cor.withValues(alpha: 0.7)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (icone != null) ...[Icon(icone, size: 12, color: cor), const SizedBox(width: 4)],
+        Text(texto,
+            style: TextStyle(
+              color: cheia ? Paleta.fundo : cor,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            )),
+      ]),
+    );
+  }
+}
+
+class _BotaoMais extends StatelessWidget {
+  const _BotaoMais({required this.tamanho});
+  final double tamanho;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: tamanho,
+      height: tamanho,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Paleta.ouro,
+        border: Border.all(color: Paleta.fundo, width: 3),
+      ),
+      child: Icon(Icons.add, size: tamanho * 0.55, color: Paleta.fundo),
+    );
+  }
+}
+
+class _BotaoCarrinho extends StatelessWidget {
+  const _BotaoCarrinho({required this.carrinho, required this.aoTocar});
+
+  final Carrinho carrinho;
+  final VoidCallback aoTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 560),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 8))],
+          ),
+          child: FilledButton(
+            onPressed: aoTocar,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 60),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            ),
+            child: Row(children: [
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Paleta.fundo),
+                child: Text('${carrinho.quantidade}',
+                    style: const TextStyle(color: Paleta.ouro, fontSize: 13, fontWeight: FontWeight.w800)),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Ver meu pedido')),
+              Text(formatarMoeda(carrinho.total)),
+            ]),
+          ),
+        ),
       ),
     );
   }
@@ -245,17 +1153,17 @@ class _Aviso extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppCores.ambar.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppCores.ambar.withValues(alpha: 0.4)),
+        color: Paleta.superficie,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Paleta.ouroEscuro),
       ),
       child: Row(children: [
-        Icon(icone, color: AppCores.ambar),
+        Icon(icone, color: Paleta.ouro),
         const SizedBox(width: 12),
-        Expanded(child: Text(texto)),
+        Expanded(child: Text(texto, style: const TextStyle(height: 1.4))),
       ]),
     );
   }
@@ -270,107 +1178,45 @@ class _AvisoPedido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 12),
       child: Material(
-        color: AppCores.ambar,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: aoAbrir,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(children: [
-              const Icon(Icons.receipt_long, color: AppCores.sobreAmbar),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text('Pedido nº ${pedido.numero}: ${pedido.etapa.titulo}',
-                    style: const TextStyle(color: AppCores.sobreAmbar, fontWeight: FontWeight.w700)),
-              ),
-              const Text('Acompanhar', style: TextStyle(color: AppCores.sobreAmbar)),
-              const Icon(Icons.chevron_right, color: AppCores.sobreAmbar),
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Foto extends StatelessWidget {
-  const _Foto({required this.url, required this.tamanho});
-
-  final String? url;
-  final double tamanho;
-
-  @override
-  Widget build(BuildContext context) {
-    final vazio = Container(
-      width: tamanho,
-      height: tamanho,
-      color: const Color(0xFF2E2720),
-      child: const Icon(Icons.local_bar_outlined, color: Color(0xFF6B5D4F)),
-    );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: url == null
-          ? vazio
-          : Image.network(url!, width: tamanho, height: tamanho, fit: BoxFit.cover, errorBuilder: (_, _, _) => vazio),
-    );
-  }
-}
-
-class _CartaoProduto extends StatelessWidget {
-  const _CartaoProduto({required this.produto, required this.noCarrinho, required this.aoTocar});
-
-  final ProdutoCardapio produto;
-  final int noCarrinho;
-  final VoidCallback aoTocar;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = produto;
-    return Opacity(
-      opacity: p.esgotado ? 0.5 : 1,
-      child: Card(
+        color: Paleta.ouro,
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: p.esgotado ? null : aoTocar,
+          onTap: aoAbrir,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             child: Row(children: [
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(p.nome, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  if (p.descricao != null && p.descricao!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(p.descricao!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: _corTextoSuave, fontSize: 13)),
-                  ],
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Text(formatarMoeda(p.preco),
-                        style: const TextStyle(color: AppCores.ambar, fontWeight: FontWeight.w800, fontSize: 16)),
-                    const SizedBox(width: 8),
-                    if (p.esgotado)
-                      const Text('Esgotado', style: TextStyle(color: Color(0xFFF87171), fontWeight: FontWeight.w600)),
-                    if (noCarrinho > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: AppCores.ambar, borderRadius: BorderRadius.circular(20)),
-                        child: Text('$noCarrinho no pedido',
-                            style: const TextStyle(color: AppCores.sobreAmbar, fontSize: 12, fontWeight: FontWeight.w700)),
-                      ),
-                  ]),
-                ]),
-              ),
+              const Icon(Icons.receipt_long, color: Paleta.fundo),
               const SizedBox(width: 12),
-              _Foto(url: p.imagemUrl, tamanho: 84),
+              Expanded(
+                child: Text('Pedido nº ${pedido.numero} · ${pedido.etapa.titulo}',
+                    style: const TextStyle(color: Paleta.fundo, fontWeight: FontWeight.w700)),
+              ),
+              const Text('Acompanhar', style: TextStyle(color: Paleta.fundo)),
+              const Icon(Icons.chevron_right, color: Paleta.fundo),
             ]),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _Rodape extends StatelessWidget {
+  const _Rodape();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(24, 48, 24, 140),
+      child: Column(children: [
+        _Ornamento(),
+        SizedBox(height: 12),
+        Text('Pagamento no local, com o atendente.\nBeba com moderação.',
+            textAlign: TextAlign.center, style: TextStyle(color: Paleta.textoSuave, fontSize: 12, height: 1.6)),
+      ]),
     );
   }
 }
@@ -406,77 +1252,88 @@ class _ProdutoSheetState extends State<_ProdutoSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (p.imagemUrl != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image.network(p.imagemUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox()),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (p.imagemUrl != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: AspectRatio(aspectRatio: 4 / 3, child: _Foto(url: p.imagemUrl, tamanhoIcone: 56)),
+                ),
+                const SizedBox(height: 18),
+              ],
+              _Etiquetas(produto: p, maisPedido: false, alinharInicio: true),
+              Text(p.categoria.toUpperCase(), style: rotuloEspacado(tamanho: 10)),
+              const SizedBox(height: 6),
+              Text(p.nome, style: serifa(28, altura: 1.15)),
+              if (p.descricao != null && p.descricao!.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(p.descricao!, style: const TextStyle(color: Paleta.textoSuave, height: 1.5)),
+              ],
+              const SizedBox(height: 14),
+              _Preco(produto: p, tamanho: 22),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _obs,
+                maxLength: 200,
+                decoration: const InputDecoration(
+                  labelText: 'Alguma observação?',
+                  hintText: 'Ex.: sem cebola, bem gelada, sem gelo',
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          Text(p.nome, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-          if (p.descricao != null && p.descricao!.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(p.descricao!, style: const TextStyle(color: _corTextoSuave)),
-          ],
-          const SizedBox(height: 8),
-          Text(formatarMoeda(p.preco),
-              style: const TextStyle(color: AppCores.ambar, fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _obs,
-            maxLength: 200,
-            decoration: const InputDecoration(labelText: 'Observação (opcional)', hintText: 'Ex.: sem cebola, bem gelada'),
+              const SizedBox(height: 8),
+              Row(children: [
+                _Quantidade(
+                  valor: _quantidade,
+                  aoMenos: _quantidade > 1 ? () => setState(() => _quantidade--) : null,
+                  aoMais: _quantidade < 50 ? () => setState(() => _quantidade++) : null,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: widget.aberto
+                        ? () {
+                            widget.carrinho.adicionar(p, _quantidade, _obs.text);
+                            Navigator.pop(context);
+                          }
+                        : null,
+                    child: Text(widget.aberto ? 'Adicionar · ${formatarMoeda(p.preco * _quantidade)}' : 'Pedidos pausados'),
+                  ),
+                ),
+              ]),
+            ]),
           ),
-          const SizedBox(height: 8),
-          Row(children: [
-            _BotaoQuantidade(
-              icone: Icons.remove,
-              aoTocar: _quantidade > 1 ? () => setState(() => _quantidade--) : null,
-            ),
-            SizedBox(
-              width: 48,
-              child: Text('$_quantidade',
-                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-            ),
-            _BotaoQuantidade(
-              icone: Icons.add,
-              aoTocar: _quantidade < 50 ? () => setState(() => _quantidade++) : null,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: FilledButton(
-                onPressed: widget.aberto
-                    ? () {
-                        widget.carrinho.adicionar(p, _quantidade, _obs.text);
-                        Navigator.pop(context);
-                      }
-                    : null,
-                child: Text(widget.aberto ? 'Adicionar · ${formatarMoeda(p.preco * _quantidade)}' : 'Pedidos fechados'),
-              ),
-            ),
-          ]),
-        ]),
+        ),
       ),
     );
   }
 }
 
-class _BotaoQuantidade extends StatelessWidget {
-  const _BotaoQuantidade({required this.icone, this.aoTocar});
+class _Quantidade extends StatelessWidget {
+  const _Quantidade({required this.valor, this.aoMenos, this.aoMais, this.iconeMenos = Icons.remove});
 
-  final IconData icone;
-  final VoidCallback? aoTocar;
+  final int valor;
+  final VoidCallback? aoMenos;
+  final VoidCallback? aoMais;
+  final IconData iconeMenos;
 
   @override
   Widget build(BuildContext context) {
-    return IconButton.outlined(
-      onPressed: aoTocar,
-      icon: Icon(icone),
-      style: IconButton.styleFrom(side: const BorderSide(color: Color(0xFF3A322A))),
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Paleta.linha),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        IconButton(onPressed: aoMenos, icon: Icon(iconeMenos, size: 20), color: Paleta.ouro),
+        SizedBox(
+          width: 28,
+          child: Text('$valor', textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        ),
+        IconButton(onPressed: aoMais, icon: const Icon(Icons.add, size: 20), color: Paleta.ouro),
+      ]),
     );
   }
 }
@@ -555,76 +1412,89 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
             );
           }
           return SingleChildScrollView(
-            child: Form(
-              key: _form,
-              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                const Text('Seu pedido', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 12),
-                for (final i in c.itens)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(children: [
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(i.produto.nome, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          if (i.observacao != null)
-                            Text(i.observacao!, style: const TextStyle(color: _corTextoSuave, fontSize: 13)),
-                          Text(formatarMoeda(i.total), style: const TextStyle(color: AppCores.ambar)),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Form(
+                  key: _form,
+                  child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    Text('Seu pedido', style: serifa(28)),
+                    const SizedBox(height: 4),
+                    Container(width: 36, height: 2, color: Paleta.ouro),
+                    const SizedBox(height: 16),
+                    for (final i in c.itens)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: Row(children: [
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(i.produto.nome, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                              if (i.observacao != null)
+                                Text(i.observacao!,
+                                    style: const TextStyle(
+                                        color: Paleta.textoSuave, fontSize: 13, fontStyle: FontStyle.italic)),
+                              const SizedBox(height: 2),
+                              Text(formatarMoeda(i.total), style: const TextStyle(color: Paleta.ouro)),
+                            ]),
+                          ),
+                          _Quantidade(
+                            valor: i.quantidade,
+                            iconeMenos: i.quantidade == 1 ? Icons.delete_outline : Icons.remove,
+                            aoMenos: () => c.alterar(i, -1),
+                            aoMais: i.quantidade < 50 ? () => c.alterar(i, 1) : null,
+                          ),
                         ]),
                       ),
-                      _BotaoQuantidade(icone: i.quantidade == 1 ? Icons.delete_outline : Icons.remove, aoTocar: () => c.alterar(i, -1)),
-                      SizedBox(
-                        width: 36,
-                        child: Text('${i.quantidade}',
-                            textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800)),
-                      ),
-                      _BotaoQuantidade(icone: Icons.add, aoTocar: i.quantidade < 50 ? () => c.alterar(i, 1) : null),
+                    const Divider(height: 20),
+                    Row(children: [
+                      const Expanded(child: Text('Total', style: TextStyle(fontSize: 17))),
+                      Text(formatarMoeda(c.total), style: serifa(26, cor: Paleta.ouro)),
                     ]),
-                  ),
-                const Divider(height: 24),
-                Row(children: [
-                  const Expanded(child: Text('Total', style: TextStyle(fontSize: 18))),
-                  Text(formatarMoeda(c.total), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                ]),
-                const SizedBox(height: 4),
-                const Text('O pagamento é feito no local, com o atendente.',
-                    style: TextStyle(color: _corTextoSuave, fontSize: 13)),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _nome,
-                  maxLength: 80,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(labelText: 'Seu nome'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
+                    const SizedBox(height: 4),
+                    const Text('O pagamento é feito no local, com o atendente.',
+                        style: TextStyle(color: Paleta.textoSuave, fontSize: 13)),
+                    const SizedBox(height: 18),
+                    TextFormField(
+                      controller: _nome,
+                      maxLength: 80,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(labelText: 'Seu nome', prefixIcon: Icon(Icons.person_outline)),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _local,
+                      maxLength: 80,
+                      readOnly: _localFixo,
+                      decoration: InputDecoration(
+                        labelText: 'Mesa ou local',
+                        hintText: 'Ex.: Mesa 5, Balcão',
+                        prefixIcon: const Icon(Icons.table_bar_outlined),
+                        helperText: _localFixo ? 'Identificado pelo QR Code' : null,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe a mesa ou o local' : null,
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _obs,
+                      maxLength: 500,
+                      decoration: const InputDecoration(
+                          labelText: 'Observação geral (opcional)', prefixIcon: Icon(Icons.edit_note)),
+                    ),
+                    if (_erro != null) ...[
+                      Text(_erro!, style: const TextStyle(color: Paleta.erro)),
+                      const SizedBox(height: 10),
+                    ],
+                    FilledButton(
+                      onPressed: _enviando ? null : _enviar,
+                      child: _enviando
+                          ? const SizedBox(
+                              width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Paleta.fundo))
+                          : Text('Enviar pedido · ${formatarMoeda(c.total)}'),
+                    ),
+                  ]),
                 ),
-                TextFormField(
-                  controller: _local,
-                  maxLength: 80,
-                  readOnly: _localFixo,
-                  decoration: InputDecoration(
-                    labelText: 'Mesa ou local',
-                    hintText: 'Ex.: Mesa 5, Balcão',
-                    prefixIcon: const Icon(Icons.place_outlined),
-                    helperText: _localFixo ? 'Identificado pelo QR Code' : null,
-                  ),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe a mesa ou o local' : null,
-                ),
-                TextFormField(
-                  controller: _obs,
-                  maxLength: 500,
-                  decoration: const InputDecoration(labelText: 'Observação geral (opcional)'),
-                ),
-                if (_erro != null) ...[
-                  Text(_erro!, style: const TextStyle(color: Color(0xFFF87171))),
-                  const SizedBox(height: 8),
-                ],
-                FilledButton(
-                  onPressed: _enviando ? null : _enviar,
-                  child: _enviando
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-                      : Text('Enviar pedido · ${formatarMoeda(c.total)}'),
-                ),
-              ]),
+              ),
             ),
           );
         },

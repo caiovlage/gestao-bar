@@ -94,7 +94,7 @@ public class VendaService {
                 if (p.precoVenda() == null) {
                     throw new NegocioException("PRODUTO_SEM_PRECO", p.nome() + " não tem preço de venda cadastrado.");
                 }
-                preco = p.precoVenda();
+                preco = p.precoVigente();
             }
             BigDecimal total = VendaCalculo.valor(preco, item.quantidade());
             BigDecimal custo = VendaCalculo.valor(p.custoMedio(), item.quantidade());

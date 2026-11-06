@@ -57,6 +57,9 @@ class Produto {
     required this.ativo,
     required this.embalagens,
     this.controlaEstoque = true,
+    this.precoPromocional,
+    this.promocaoAte,
+    this.destaqueCardapio = false,
   });
 
   final String id;
@@ -81,6 +84,13 @@ class Produto {
 
   /// Falso para pratos preparados: a venda não movimenta estoque.
   final bool controlaEstoque;
+
+  /// Preço com desconto; vale até [promocaoAte] (inclusive) ou sem prazo.
+  final num? precoPromocional;
+  final DateTime? promocaoAte;
+
+  /// "Sugestão da casa" em destaque no cardápio.
+  final bool destaqueCardapio;
 
   factory Produto.fromJson(Map<String, dynamic> json) {
     final categoria = json['categoria'] as Map<String, dynamic>?;
@@ -107,6 +117,9 @@ class Produto {
           .map((e) => Embalagem.fromJson(e as Map<String, dynamic>))
           .toList(),
       controlaEstoque: json['controlaEstoque'] as bool? ?? true,
+      precoPromocional: numDoJson(json['precoPromocional']),
+      promocaoAte: json['promocaoAte'] == null ? null : DateTime.parse(json['promocaoAte'] as String),
+      destaqueCardapio: json['destaqueCardapio'] as bool? ?? false,
     );
   }
 }
@@ -127,6 +140,9 @@ class ProdutoForm {
     required this.vendeNoCardapio,
     required this.embalagens,
     this.controlaEstoque = true,
+    this.precoPromocional,
+    this.promocaoAte,
+    this.destaqueCardapio = false,
   });
 
   final String nome;
@@ -142,6 +158,9 @@ class ProdutoForm {
   final bool vendeNoCardapio;
   final List<({String? id, String unidadeId, String descricao, num fator})> embalagens;
   final bool controlaEstoque;
+  final num? precoPromocional;
+  final DateTime? promocaoAte;
+  final bool destaqueCardapio;
 
   Map<String, dynamic> toJson() => {
         'nome': nome,
@@ -156,6 +175,9 @@ class ProdutoForm {
         'codigoInterno': codigoInterno,
         'vendeNoCardapio': vendeNoCardapio,
         'controlaEstoque': controlaEstoque,
+        'precoPromocional': precoPromocional,
+        'promocaoAte': promocaoAte == null ? null : dataParaApi(promocaoAte!),
+        'destaqueCardapio': destaqueCardapio,
         'embalagens': [
           for (final e in embalagens)
             {'id': e.id, 'unidadeId': e.unidadeId, 'descricao': e.descricao, 'fator': e.fator},

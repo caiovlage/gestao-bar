@@ -201,6 +201,14 @@ public class ProdutoService {
                 req.estoqueMinimo(), req.fornecedorPrincipalId(), codigo, cardapio);
         produto.sincronizarEmbalagens(embalagens(req.embalagens(), novo));
 
+        BigDecimal promocional = req.tipo().isVendavel() ? req.precoPromocional() : null;
+        if (promocional != null && promocional.compareTo(preco) >= 0) {
+            throw new NegocioException("PRECO_PROMOCIONAL_INVALIDO",
+                    "O preço promocional deve ser menor que o preço de venda.");
+        }
+        produto.definirDestaques(promocional, req.promocaoAte(),
+                cardapio && Boolean.TRUE.equals(req.destaqueCardapio()));
+
         boolean controla = req.controlarEstoque();
         if (!controla && !novo && produto.isControlaEstoque() && estoqueService.quantidade(produto.getId()).signum() != 0) {
             throw new NegocioException("PRODUTO_COM_SALDO",
