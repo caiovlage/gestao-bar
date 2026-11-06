@@ -28,4 +28,12 @@ docs/               instalação, arquitetura e decisões
 
 Próximas etapas: 2 Estoque · 3 Receitas · 4 Vendas e Caixa · 5 Compras · 6 Pedidos web · 7 BI.
 
-Veja [docs/instalacao.md](docs/instalacao.md) para executar o projeto.
+## Instalar ou atualizar no servidor (Oracle Linux)
+
+```bash
+git clone https://github.com/caiovlage/gestao-bar.git ~/gestao-bar
+cd ~/gestao-bar && ./deploy.sh
+```
+
+O mesmo `./deploy.sh` atualiza tudo depois (código, banco, painel e backend). Detalhes, opções e
+solução de problemas em [docs/instalacao.md](docs/instalacao.md).

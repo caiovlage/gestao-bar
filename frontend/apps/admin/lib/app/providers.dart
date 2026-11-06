@@ -1,11 +1,20 @@
 import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/auth/auth_controller.dart';
 import '../features/auth/token_storage.dart';
 
-/// URL da API. Defina na execução: flutter run --dart-define=API_URL=http://192.168.0.10:8080
-const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8080');
+const _apiUrlInformada = String.fromEnvironment('API_URL');
+
+/// Endereço da API.
+/// - Produção (Web): sem API_URL, usa a origem da própria página (ex.: http://SERVIDOR).
+///   O painel e a API saem pelo mesmo nginx na porta 80; o backend nunca é acessado direto.
+/// - Desenvolvimento: flutter run --dart-define=API_URL=http://localhost:8080
+/// - APK Android: flutter build apk --dart-define=API_URL=http://SERVIDOR
+final apiUrl = _apiUrlInformada.isNotEmpty
+    ? _apiUrlInformada
+    : (kIsWeb ? Uri.base.origin : 'http://localhost:8080');
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
