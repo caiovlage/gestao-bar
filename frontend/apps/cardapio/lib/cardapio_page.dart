@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:core/core.dart' show formatarMoeda, mensagemDeErro;
@@ -151,7 +152,7 @@ class _CardapioPageState extends State<CardapioPage> {
       future: _cardapio,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(body: _Carregando());
         }
         if (snap.hasError) {
           return Scaffold(
@@ -223,12 +224,7 @@ class _CardapioPageState extends State<CardapioPage> {
               ]),
             ),
             if (c.categorias.isEmpty)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Text('O cardápio ainda está sendo montado.', style: TextStyle(color: Paleta.textoSuave)),
-                ),
-              )
+              const SliverFillRemaining(hasScrollBody: false, child: _CardapioVazio())
             else if (_filtrando)
               ..._resultados(c, margem, cartao)
             else ...[
@@ -944,6 +940,93 @@ class _LinhaProduto extends StatelessWidget {
           ]),
         ),
       ),
+    );
+  }
+}
+
+// =============================================================================
+// Carregando e cardápio vazio
+// =============================================================================
+
+/// Carregamento com mensagens conforme o tempo passa, para não parecer travado.
+class _Carregando extends StatefulWidget {
+  const _Carregando();
+
+  @override
+  State<_Carregando> createState() => _CarregandoState();
+}
+
+class _CarregandoState extends State<_Carregando> {
+  static const _mensagens = [
+    (Duration.zero, 'Carregando o cardápio…'),
+    (Duration(seconds: 4), 'Quase lá… preparando o cardápio'),
+    (Duration(seconds: 10), 'Sua conexão parece lenta. Ainda carregando…'),
+  ];
+  final _inicio = DateTime.now();
+  late final Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final decorrido = DateTime.now().difference(_inicio);
+    final mensagem = _mensagens.lastWhere((m) => decorrido >= m.$1).$2;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3.5)),
+          const SizedBox(height: 20),
+          Text('Cardápio', style: serifa(24)),
+          const SizedBox(height: 8),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Text(mensagem,
+                key: ValueKey(mensagem),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Paleta.textoSuave, height: 1.5)),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _CardapioVazio extends StatelessWidget {
+  const _CardapioVazio();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 48, 32, 140),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Container(
+          width: 84,
+          height: 84,
+          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Paleta.ouroEscuro)),
+          child: const Icon(Icons.restaurant_menu, size: 38, color: Paleta.ouro),
+        ),
+        const SizedBox(height: 20),
+        Text('Cardápio em preparação', textAlign: TextAlign.center, style: serifa(24)),
+        const SizedBox(height: 10),
+        const Text(
+          'Estamos organizando os itens do cardápio digital.\nEnquanto isso, chame um atendente para fazer seu pedido.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Paleta.textoSuave, height: 1.5),
+        ),
+        const SizedBox(height: 18),
+        const _Ornamento(),
+      ]),
     );
   }
 }

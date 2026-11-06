@@ -1,3 +1,6 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -8,6 +11,19 @@ import 'tema.dart';
 
 void main() {
   runApp(const CardapioApp());
+  // Tira a tela de carregamento do index.html assim que o app desenhar a primeira tela
+  // (não depende só do evento do Flutter, que pode não ser disparado).
+  WidgetsBinding.instance.addPostFrameCallback((_) => _removerCarregandoHtml());
+}
+
+void _removerCarregandoHtml() {
+  try {
+    if (globalContext.has('removerCarregando')) {
+      globalContext.callMethod('removerCarregando'.toJS);
+    }
+  } catch (_) {
+    // sem a tela de carregamento (ex.: execução fora do navegador): nada a fazer
+  }
 }
 
 class CardapioApp extends StatelessWidget {
