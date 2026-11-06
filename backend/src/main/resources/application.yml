@@ -30,6 +30,8 @@ spring:
 
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
+  # Fuso do bar: define "o dia" em filtros e relatórios (o banco guarda tudo em UTC).
+  fuso-horario: ${FUSO_HORARIO:America/Sao_Paulo}
   security:
     jwt-secret: ${JWT_SECRET:}
     jwt-expiration: ${JWT_EXPIRATION:PT12H}

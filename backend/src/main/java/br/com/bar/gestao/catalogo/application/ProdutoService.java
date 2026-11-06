@@ -92,6 +92,15 @@ public class ProdutoService {
         return resposta(carregar(id));
     }
 
+    /** Busca pelo código exato (código de barras, QR Code ou código interno), ignorando maiúsculas. */
+    @Transactional(readOnly = true)
+    public ProdutoDto.Response buscarPorCodigo(String codigo) {
+        String termo = codigo == null ? "" : codigo.trim();
+        return produtoRepository.findByCodigoInternoIgnoreCase(termo)
+                .map(this::resposta)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto com o código", termo));
+    }
+
     @Transactional
     public ProdutoDto.Response criar(ProdutoDto.Request req) {
         UnidadeMedida unidade = unidadeEstoque(req.unidadeEstoqueId());
@@ -107,10 +116,11 @@ public class ProdutoService {
     public ProdutoDto.Response atualizar(UUID id, ProdutoDto.Request req) {
         Produto produto = carregar(id);
         UnidadeMedida unidade = unidadeEstoque(req.unidadeEstoqueId());
+        // O histórico de movimentações está na unidade atual; trocá-la mudaria o sentido dos registros.
         if (!unidade.getId().equals(produto.getUnidadeEstoque().getId())
-                && estoqueService.quantidade(id).signum() != 0) {
+                && (estoqueService.quantidade(id).signum() != 0 || estoqueService.possuiMovimentacoes(id))) {
             throw new NegocioException("UNIDADE_ESTOQUE_BLOQUEADA",
-                    "Não é possível alterar a unidade de estoque de um produto com saldo. Zere o estoque antes.");
+                    "Não é possível alterar a unidade de estoque de um produto que já tem saldo ou movimentações.");
         }
         aplicar(produto, req, unidade, false);
         log.info("Produto atualizado: id={} nome={}", id, produto.getNome());

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/widgets/leitor_codigo.dart';
 import '../../app/widgets/paginacao.dart';
 import '../categorias/categorias.dart';
 import 'produto_imagem.dart';
@@ -26,6 +27,24 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
     _debounce?.cancel();
     _busca.dispose();
     super.dispose();
+  }
+
+  /// Código já cadastrado: abre o produto. Código novo: abre o cadastro com o código preenchido.
+  Future<void> _lerCodigo() async {
+    final codigo = await lerCodigo(context);
+    if (codigo == null || !mounted) return;
+    try {
+      final produto = await ref.read(produtosRepositoryProvider).buscarPorCodigo(codigo);
+      if (mounted) context.go('/produtos/${produto.id}');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.status == 404) {
+        mostrarSucesso(context, 'Código $codigo não cadastrado: preencha o novo produto.');
+        context.go(Uri(path: '/produtos/novo', queryParameters: {'codigo': codigo}).toString());
+      } else {
+        mostrarErro(context, e);
+      }
+    }
   }
 
   void _aoDigitar(String texto) {
@@ -50,6 +69,11 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
           titulo: 'Produtos',
           subtitulo: 'Itens de revenda, ingredientes e produtos preparados',
           acoes: [
+            OutlinedButton.icon(
+              onPressed: _lerCodigo,
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Ler código'),
+            ),
             FilledButton.icon(
               onPressed: () => context.go('/produtos/novo'),
               icon: const Icon(Icons.add),

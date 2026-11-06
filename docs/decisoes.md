@@ -18,8 +18,38 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 | 10 | Imagens em disco local (volume Docker), validadas pela assinatura do arquivo, nomes UUID | Simples; pode migrar para armazenamento de objetos no futuro. |
 | 11 | Frontend sem geração de código (`freezed`/`riverpod_generator`); modelos `fromJson` escritos à mão | Menos etapas de build; os modelos são pequenos. |
 
+## Etapa 2 — Estoque
+
+| # | Decisão | Motivo |
+|---|---|---|
+| 12 | Saldo alterado **somente** por `EstoqueService`, sempre com uma linha em `movimentacao_estoque` na mesma transação; o banco garante `saldo_posterior = saldo_anterior + quantidade` | Auditoria completa: o saldo pode ser reconstruído pelo histórico. Movimentações são imutáveis. |
+| 13 | **Bloqueio pessimista** (`SELECT … FOR UPDATE`) dos saldos envolvidos, sempre em ordem crescente de `produto_id` | Operações simultâneas nunca deixam o saldo errado nem negativo; a ordem fixa evita deadlocks. Testado com 8 saídas simultâneas. |
+| 14 | Saídas validam o saldo **disponível** (`quantidade − reservada`); estoque negativo bloqueado salvo configuração | Prepara a reserva dos pedidos web (Etapa 6). |
+| 15 | Tipos manuais: entrada, consumo interno, **perda (motivo obrigatório)** e **devolução ao fornecedor** (saída). Venda, consumo de receita, compra e estorno são exclusivos do sistema | "Devolução" da especificação interpretada como devolução ao fornecedor; estorno de venda é tipo próprio (Etapa 4). |
+| 16 | Entrada manual **não altera o custo** do produto; registra o custo vigente na movimentação | O custo médio ponderado será recalculado pelas compras (Etapa 5). |
+| 17 | Quantidade pode ser informada em unidade compatível (kg para produto em g) ou embalagem (caixa), convertida no backend; a forma informada fica registrada ("2 × Caixa 12") | Facilita o uso e mantém a auditoria. |
+| 18 | **Inventário**: um aberto por vez; contagem salva aos poucos; itens não contados são ignorados; a diferença é calculada contra o saldo **no momento da conclusão** | Vendas durante a contagem não se perdem; inventários parciais (por categoria) são possíveis. |
+| 19 | **Ajuste avulso** de um produto (contagem rápida) gera o mesmo tipo de movimentação do inventário | Corrigir divergências sem abrir um inventário completo. |
+| 20 | Unidade de estoque não pode mudar se o produto já tiver movimentações | O histórico está na unidade original. |
+| 21 | Filtros por data usam o fuso do bar (`FUSO_HORARIO`, padrão `America/Sao_Paulo`); o banco guarda tudo em UTC | "Hoje" no bar não é o mesmo dia que em UTC após as 21h. |
+
+## Etapa 3 — Receitas
+
+| # | Decisão | Motivo |
+|---|---|---|
+| 22 | Receitas são **apenas para consulta**: nome, foto, rendimento (texto livre), tempo, ingredientes e modo de preparo. **Sem vínculo** com produtos, estoque, categorias ou custos | Pedido do responsável: cadastro simples para consulta rápida na cozinha. Consequência: a venda de pratos preparados **não baixa ingredientes automaticamente**; o estoque de ingredientes é controlado por movimentações (consumo interno, perdas) e inventários. O vínculo pode ser adicionado no futuro sem refazer as receitas. |
+| 23 | **Ingredientes e modo de preparo aceitam texto colado de sites com a formatação**: editor visual no navegador (área editável nativa em iframe), guardado em HTML e **limpo no servidor** (jsoup), mantendo parágrafos, negrito, itálico, sublinhado, títulos e listas; removendo scripts, estilos, cores, fontes, imagens e links | Colar com formatação não é suportado pelos editores Flutter na Web (`flutter_quill`) e a API de área de transferência exige HTTPS. A limpeza garante segurança e leitura uniforme. No APK, a edição é em texto simples. |
+| 24 | Tela de consulta com **letra ajustável** e layout em duas colunas (ingredientes ao lado do preparo) em telas largas | Leitura à distância na cozinha. |
+
+## Cadastro de produto por código de barras / QR Code
+
+| # | Decisão | Motivo |
+|---|---|---|
+| 25 | Botão **"Ler código"** na lista de produtos: código já cadastrado abre o produto; código novo abre o cadastro com o código preenchido. No formulário, o campo de código também tem o leitor | Pedido do responsável. |
+| 26 | O código lido fica no campo existente **"código interno"**, ampliado de 30 para **100 caracteres** (QR Codes podem conter URLs) e único por produto (sem diferenciar maiúsculas) | Evita um campo novo; códigos de barras e códigos internos convivem no mesmo lugar. |
+| 27 | Leitura pela **câmera** (pacote `mobile_scanner`) no APK e no navegador em **HTTPS/localhost**; pelo IP em HTTP o navegador bloqueia a câmera, então o leitor aceita **digitação ou leitor USB** (que "digita" o código e tecla Enter) | Regra de segurança dos navegadores; o leitor USB funciona em qualquer cenário. |
+
 ## Próximas etapas — sugestões a validar
 
 - **Reserva de estoque** de pedidos web no momento do **aceite** (não no recebimento), liberada ao cancelar.
 - **Venda exige caixa aberto**, tanto no PDV quanto na finalização de pedidos.
-- **Bloqueio pessimista** por produto (`SELECT … FOR UPDATE` ordenado por id) nas baixas de estoque.

@@ -178,6 +178,10 @@ class ProdutosRepository {
   Future<Produto> buscar(String id) async =>
       Produto.fromJson(await _api.get('$_base/$id') as Map<String, dynamic>);
 
+  /// Produto com o código exato (barras/QR). Lança [ApiException] com status 404 se não existir.
+  Future<Produto> buscarPorCodigo(String codigo) async =>
+      Produto.fromJson(await _api.get('$_base/por-codigo', query: {'codigo': codigo}) as Map<String, dynamic>);
+
   Future<Produto> salvar(String? id, ProdutoForm form) async {
     final dados = id == null
         ? await _api.post(_base, corpo: form.toJson())

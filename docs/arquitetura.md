@@ -28,11 +28,15 @@ Pacote base `br.com.bar.gestao`. Cada módulo de negócio segue a mesma organiza
 | `configuracao` | parâmetros chave/valor (nome do bar, cardápio aberto, estoque negativo) |
 | `catalogo` | categorias, unidades de medida, conversões, produtos e embalagens |
 | `fornecedor` | cadastro de fornecedores |
-| `estoque` | saldo de estoque (movimentações na Etapa 2) |
+| `receita` | receitas para consulta (ingredientes e modo de preparo em HTML limpo), independentes do resto |
+| `estoque` | saldo, movimentações (histórico imutável), entradas/saídas/ajustes, inventário e consultas de posição |
 
 Regras de acoplamento:
 
 - Módulos se comunicam pelos **serviços** (`application`), nunca pelos repositórios de outro módulo.
+- Outros módulos leem o catálogo por `ProdutoConsultaService` (fachada só de leitura, sem dependências),
+  evitando ciclos: `catalogo → estoque` (criação do saldo) e `estoque → ProdutoConsultaService`.
+- Consultas de relatório que cruzam várias tabelas usam SQL direto (`JdbcClient`) em serviços de leitura.
 - Referências entre módulos usam **ID** (ex.: `produto.fornecedor_principal_id`), não associações JPA.
 - O saldo de estoque só é alterado por `EstoqueService`.
 

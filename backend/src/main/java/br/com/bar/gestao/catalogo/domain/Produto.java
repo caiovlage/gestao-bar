@@ -60,7 +60,7 @@ public class Produto extends BaseEntity {
     @Column(name = "fornecedor_principal_id")
     private UUID fornecedorPrincipalId;
 
-    @Column(name = "codigo_interno", length = 30)
+    @Column(name = "codigo_interno", length = 100)
     private String codigoInterno;
 
     @Column(name = "imagem_url", length = 300)

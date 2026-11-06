@@ -8,9 +8,14 @@ import '../features/auth/login_page.dart';
 import '../features/categorias/categorias_page.dart';
 import '../features/configuracoes/configuracoes_page.dart';
 import '../features/em_breve/em_breve_page.dart';
+import '../features/estoque/estoque_page.dart';
+import '../features/estoque/inventario_page.dart';
 import '../features/fornecedores/fornecedores_page.dart';
 import '../features/produtos/produto_form_page.dart';
 import '../features/produtos/produtos_page.dart';
+import '../features/receitas/receita_form_page.dart';
+import '../features/receitas/receita_page.dart';
+import '../features/receitas/receitas_page.dart';
 import 'menu.dart';
 import 'shell/admin_shell.dart';
 
@@ -45,12 +50,30 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => AdminShell(child: child),
         routes: [
           GoRoute(path: '/produtos', builder: (_, _) => const ProdutosPage()),
-          GoRoute(path: '/produtos/novo', builder: (_, _) => const ProdutoFormPage()),
+          GoRoute(
+            path: '/produtos/novo',
+            builder: (_, state) => ProdutoFormPage(codigoInicial: state.uri.queryParameters['codigo']),
+          ),
           GoRoute(
             path: '/produtos/:id',
             builder: (_, state) => ProdutoFormPage(produtoId: state.pathParameters['id']),
           ),
           GoRoute(path: '/categorias', builder: (_, _) => const CategoriasPage()),
+          GoRoute(path: '/estoque', builder: (_, _) => const EstoquePage()),
+          GoRoute(path: '/receitas', builder: (_, _) => const ReceitasPage()),
+          GoRoute(path: '/receitas/nova', builder: (_, _) => const ReceitaFormPage()),
+          GoRoute(
+            path: '/receitas/:id/editar',
+            builder: (_, state) => ReceitaFormPage(receitaId: state.pathParameters['id']),
+          ),
+          GoRoute(
+            path: '/receitas/:id',
+            builder: (_, state) => ReceitaPage(receitaId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/estoque/inventarios/:id',
+            builder: (_, state) => InventarioPage(inventarioId: state.pathParameters['id']!),
+          ),
           GoRoute(path: '/fornecedores', builder: (_, _) => const FornecedoresPage()),
           GoRoute(path: '/configuracoes', builder: (_, _) => const ConfiguracoesPage()),
           // Módulos das próximas etapas

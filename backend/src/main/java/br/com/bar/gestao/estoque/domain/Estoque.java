@@ -64,4 +64,9 @@ public class Estoque {
     public BigDecimal getDisponivel() {
         return quantidade.subtract(quantidadeReservada);
     }
+
+    /** Soma (ou subtrai, se negativo) do saldo. Use somente via EstoqueService, com movimentação. */
+    public void aplicar(BigDecimal delta) {
+        this.quantidade = this.quantidade.add(delta);
+    }
 }

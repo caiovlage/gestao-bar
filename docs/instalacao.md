@@ -131,6 +131,9 @@ sudo tail -f /var/log/nginx/error.log     # logs do nginx
 
 ## HTTPS (recomendado para acesso pela internet)
 
+> O leitor de código de barras/QR Code pela **câmera do navegador** também exige HTTPS. Sem HTTPS, use o
+> aplicativo Android ou um leitor de código de barras USB (funciona como teclado).
+
 Com HTTP simples, login e dados trafegam sem criptografia. Na rede interna do bar é aceitável;
 para acesso pela internet, use HTTPS. É necessário um **domínio** apontando (registro DNS tipo A)
 para o IP do servidor.

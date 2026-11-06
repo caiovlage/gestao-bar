@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../app/widgets/leitor_codigo.dart';
 import '../categorias/categorias.dart';
 import '../fornecedores/fornecedores.dart';
 import '../unidades/unidades.dart';
@@ -19,9 +20,12 @@ final _produtoDetalheProvider = FutureProvider.autoDispose.family<Produto, Strin
 /// Carrega os dados de apoio (unidades, categorias, fornecedores e o produto, se edição)
 /// e então exibe o formulário.
 class ProdutoFormPage extends ConsumerWidget {
-  const ProdutoFormPage({super.key, this.produtoId});
+  const ProdutoFormPage({super.key, this.produtoId, this.codigoInicial});
 
   final String? produtoId;
+
+  /// Código lido pela câmera/leitor que ainda não estava cadastrado (cadastro novo).
+  final String? codigoInicial;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -47,11 +51,12 @@ class ProdutoFormPage extends ConsumerWidget {
       return const Carregando();
     }
     return _ProdutoFormulario(
-      key: ValueKey(produtoId),
+      key: ValueKey('$produtoId|$codigoInicial'),
       produto: produto.value,
       unidades: unidades.value!,
       categorias: categorias.value!,
       fornecedores: fornecedores.value!,
+      codigoInicial: codigoInicial,
     );
   }
 }
@@ -79,9 +84,11 @@ class _ProdutoFormulario extends ConsumerStatefulWidget {
     required this.unidades,
     required this.categorias,
     required this.fornecedores,
+    this.codigoInicial,
   });
 
   final Produto? produto;
+  final String? codigoInicial;
   final List<UnidadeMedida> unidades;
   final List<Categoria> categorias;
   final List<Fornecedor> fornecedores;
@@ -99,7 +106,7 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
   late final _custo = TextEditingController(text: formatarParaEdicao(_produto?.custoMedio));
   late final _preco = TextEditingController(text: formatarParaEdicao(_produto?.precoVenda));
   late final _estoqueMinimo = TextEditingController(text: formatarParaEdicao(_produto?.estoqueMinimo ?? 0));
-  late final _codigo = TextEditingController(text: _produto?.codigoInterno);
+  late final _codigo = TextEditingController(text: _produto?.codigoInterno ?? widget.codigoInicial);
 
   late String? _categoriaId = _produto?.categoriaId;
   late TipoProduto _tipo = _produto?.tipo ?? TipoProduto.revenda;
@@ -334,11 +341,19 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
                 TextFormField(
                   controller: _codigo,
                   decoration: InputDecoration(
-                    labelText: 'Código interno',
+                    labelText: 'Código de barras / código interno',
                     helperText: 'Opcional',
                     errorText: _erro?.campos['codigoInterno'],
+                    suffixIcon: IconButton(
+                      tooltip: 'Ler código pela câmera ou leitor',
+                      icon: const Icon(Icons.qr_code_scanner),
+                      onPressed: () async {
+                        final codigo = await lerCodigo(context);
+                        if (codigo != null) setState(() => _codigo.text = codigo);
+                      },
+                    ),
                   ),
-                  maxLength: 30,
+                  maxLength: 100,
                 ),
               ]),
               TextFormField(

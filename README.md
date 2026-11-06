@@ -20,13 +20,14 @@ infra/nginx/        proxy reverso para produção
 docs/               instalação, arquitetura e decisões
 ```
 
-## Situação atual — Etapa 1 (Fundação) concluída
+## Situação atual
 
-- Autenticação com usuário fixo (variáveis de ambiente) e JWT
-- Categorias, unidades de medida (com conversões), fornecedores e produtos (com embalagens e imagem)
-- Painel com login, menu lateral responsivo e telas de Produtos, Categorias, Fornecedores e Configurações
-
-Próximas etapas: 2 Estoque · 3 Receitas · 4 Vendas e Caixa · 5 Compras · 6 Pedidos web · 7 BI.
+| Etapa | Situação |
+|---|---|
+| 1. Fundação — login, produtos, categorias, unidades, fornecedores | ✅ concluída |
+| 2. Estoque — movimentações, entradas, perdas, ajustes, inventário | ✅ concluída |
+| 3. Receitas — cadastro e consulta, colando a formatação de sites | ✅ concluída |
+| 4. Vendas e Caixa · 5. Compras · 6. Pedidos web · 7. BI | próximas |
 
 ## Instalar ou atualizar no servidor (Oracle Linux)
 

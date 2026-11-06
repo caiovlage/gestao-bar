@@ -29,7 +29,7 @@ public final class ProdutoDto {
             @DecimalMin("0") @Digits(integer = 12, fraction = 2) BigDecimal precoVenda,
             @NotNull @DecimalMin("0") @Digits(integer = 12, fraction = 3) BigDecimal estoqueMinimo,
             UUID fornecedorPrincipalId,
-            @Size(max = 30) String codigoInterno,
+            @Size(max = 100) String codigoInterno,
             Boolean vendeNoCardapio,
             @Valid @Size(max = 20) List<EmbalagemRequest> embalagens) {
 

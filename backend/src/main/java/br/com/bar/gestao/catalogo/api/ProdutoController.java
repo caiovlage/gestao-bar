@@ -57,6 +57,12 @@ public class ProdutoController {
         return service.buscar(id);
     }
 
+    @GetMapping("/por-codigo")
+    @Operation(summary = "Busca pelo código exato (código de barras/QR Code lido). 404 se não cadastrado")
+    public ProdutoDto.Response buscarPorCodigo(@RequestParam String codigo) {
+        return service.buscarPorCodigo(codigo);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProdutoDto.Response criar(@Valid @RequestBody ProdutoDto.Request request) {
