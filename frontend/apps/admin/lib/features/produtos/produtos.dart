@@ -56,6 +56,7 @@ class Produto {
     required this.vendeNoCardapio,
     required this.ativo,
     required this.embalagens,
+    this.controlaEstoque = true,
   });
 
   final String id;
@@ -77,6 +78,9 @@ class Produto {
   final bool vendeNoCardapio;
   final bool ativo;
   final List<Embalagem> embalagens;
+
+  /// Falso para pratos preparados: a venda não movimenta estoque.
+  final bool controlaEstoque;
 
   factory Produto.fromJson(Map<String, dynamic> json) {
     final categoria = json['categoria'] as Map<String, dynamic>?;
@@ -102,6 +106,7 @@ class Produto {
       embalagens: (json['embalagens'] as List)
           .map((e) => Embalagem.fromJson(e as Map<String, dynamic>))
           .toList(),
+      controlaEstoque: json['controlaEstoque'] as bool? ?? true,
     );
   }
 }
@@ -121,6 +126,7 @@ class ProdutoForm {
     this.codigoInterno,
     required this.vendeNoCardapio,
     required this.embalagens,
+    this.controlaEstoque = true,
   });
 
   final String nome;
@@ -135,6 +141,7 @@ class ProdutoForm {
   final String? codigoInterno;
   final bool vendeNoCardapio;
   final List<({String? id, String unidadeId, String descricao, num fator})> embalagens;
+  final bool controlaEstoque;
 
   Map<String, dynamic> toJson() => {
         'nome': nome,
@@ -148,6 +155,7 @@ class ProdutoForm {
         'fornecedorPrincipalId': fornecedorPrincipalId,
         'codigoInterno': codigoInterno,
         'vendeNoCardapio': vendeNoCardapio,
+        'controlaEstoque': controlaEstoque,
         'embalagens': [
           for (final e in embalagens)
             {'id': e.id, 'unidadeId': e.unidadeId, 'descricao': e.descricao, 'fator': e.fator},

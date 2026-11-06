@@ -49,7 +49,21 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 | 26 | O código lido fica no campo existente **"código interno"**, ampliado de 30 para **100 caracteres** (QR Codes podem conter URLs) e único por produto (sem diferenciar maiúsculas) | Evita um campo novo; códigos de barras e códigos internos convivem no mesmo lugar. |
 | 27 | Leitura pela **câmera** (pacote `mobile_scanner`) no APK e no navegador em **HTTPS/localhost**; pelo IP em HTTP o navegador bloqueia a câmera, então o leitor aceita **digitação ou leitor USB** (que "digita" o código e tecla Enter) | Regra de segurança dos navegadores; o leitor USB funciona em qualquer cenário. |
 
+## Etapa 4 — Vendas e caixa
+
+| # | Decisão | Motivo |
+|---|---|---|
+| 28 | Produto com opção **"Controlar estoque"**: desligada para pratos preparados, que só registram faturamento e **custo de preparo** (para lucro e margem), sem movimentar estoque; ficam fora da posição de estoque e dos inventários | Pedido do responsável: pratos sem controle de estoque, mas com custo para saber o lucro. |
+| 29 | **Venda exige caixa aberto**; um caixa aberto por vez | O fechamento confere todas as vendas do turno. |
+| 30 | A venda **congela nome, preço e custo** de cada item; lucro bruto = total (após desconto) − custo | Alterações futuras de preço/custo não mudam o histórico. |
+| 31 | **Desconto** no total da venda, em valor **ou** percentual; **uma forma de pagamento** por venda; em dinheiro, valor recebido e troco | Rapidez no PDV. |
+| 32 | **Idempotência**: cada carrinho tem uma chave única; reenviar a mesma venda (duplo clique, rede instável) devolve a venda já registrada | Evita vendas e baixas de estoque duplicadas. |
+| 33 | **Cancelamento** com justificativa, **só enquanto o caixa da venda estiver aberto**; a venda fica no histórico como cancelada e o estoque é estornado | Caixa fechado e conferido não muda depois. |
+| 34 | **Concorrência venda × fechamento**: a venda trava o caixa em modo compartilhado e o fechamento em modo exclusivo | Nenhuma venda entra num caixa cujos totais já foram apurados. |
+| 35 | Fechamento: totais por forma de pagamento, suprimentos, retiradas e **dinheiro esperado na gaveta** (inicial + dinheiro + suprimentos − retiradas) comparado ao **valor contado**; retirada maior que o esperado é recusada | Conferência simples do turno. |
+| 36 | **Comprovante interno** em texto (não fiscal), exibido na tela com opção de copiar | Impressão direta fica para depois (exige integração com impressora). |
+| 37 | PDV em **tela cheia**, separado do painel; busca por nome e por **código (leitor USB + Enter adiciona ao carrinho)** | Operação rápida no balcão. |
+
 ## Próximas etapas — sugestões a validar
 
 - **Reserva de estoque** de pedidos web no momento do **aceite** (não no recebimento), liberada ao cancelar.
-- **Venda exige caixa aberto**, tanto no PDV quanto na finalização de pedidos.

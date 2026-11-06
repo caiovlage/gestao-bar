@@ -43,12 +43,14 @@ public class ProdutoConsultaService {
 
     /** Dados essenciais de um produto para outros módulos. */
     public record ProdutoResumo(UUID id, String nome, String unidadeSigla, BigDecimal custoMedio, boolean ativo,
-                                UUID categoriaId, String categoriaNome) {
+                                UUID categoriaId, String categoriaNome, boolean vendavel, BigDecimal precoVenda,
+                                boolean controlaEstoque) {
 
         static ProdutoResumo of(Produto p) {
             return new ProdutoResumo(p.getId(), p.getNome(), p.getUnidadeEstoque().getSigla(), p.getCustoMedio(),
                     p.isAtivo(), p.getCategoria() == null ? null : p.getCategoria().getId(),
-                    p.getCategoria() == null ? null : p.getCategoria().getNome());
+                    p.getCategoria() == null ? null : p.getCategoria().getNome(), p.getTipo().isVendavel(),
+                    p.getPrecoVenda(), p.isControlaEstoque());
         }
     }
 

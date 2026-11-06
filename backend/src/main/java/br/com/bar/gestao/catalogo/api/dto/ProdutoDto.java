@@ -31,7 +31,13 @@ public final class ProdutoDto {
             UUID fornecedorPrincipalId,
             @Size(max = 100) String codigoInterno,
             Boolean vendeNoCardapio,
-            @Valid @Size(max = 20) List<EmbalagemRequest> embalagens) {
+            @Valid @Size(max = 20) List<EmbalagemRequest> embalagens,
+            /** Falso para pratos preparados (sem controle de estoque). Ausente = true. */
+            Boolean controlaEstoque) {
+
+        public boolean controlarEstoque() {
+            return controlaEstoque == null || controlaEstoque;
+        }
 
         public boolean exibirNoCardapio() {
             return Boolean.TRUE.equals(vendeNoCardapio);
@@ -63,18 +69,21 @@ public final class ProdutoDto {
             String imagemUrl,
             boolean vendeNoCardapio,
             boolean ativo,
-            List<EmbalagemResponse> embalagens) {
+            List<EmbalagemResponse> embalagens,
+            boolean controlaEstoque) {
 
         public static Response of(Produto p, BigDecimal estoqueAtual) {
             BigDecimal estoque = estoqueAtual == null ? BigDecimal.ZERO : estoqueAtual;
-            boolean abaixo = p.getEstoqueMinimo().signum() > 0 && estoque.compareTo(p.getEstoqueMinimo()) < 0;
+            boolean abaixo = p.isControlaEstoque() && p.getEstoqueMinimo().signum() > 0
+                    && estoque.compareTo(p.getEstoqueMinimo()) < 0;
             Referencia categoria = p.getCategoria() == null ? null
                     : new Referencia(p.getCategoria().getId(), p.getCategoria().getNome());
             return new Response(p.getId(), p.getNome(), p.getDescricao(), categoria, p.getTipo(),
                     UnidadeMedidaDto.Response.of(p.getUnidadeEstoque()), p.getCustoMedio(), p.getPrecoVenda(),
                     p.margemBrutaPercentual().orElse(null), estoque, p.getEstoqueMinimo(), abaixo,
                     p.getFornecedorPrincipalId(), p.getCodigoInterno(), p.getImagemUrl(), p.isVendeNoCardapio(),
-                    p.isAtivo(), p.getEmbalagens().stream().map(EmbalagemResponse::of).toList());
+                    p.isAtivo(), p.getEmbalagens().stream().map(EmbalagemResponse::of).toList(),
+                    p.isControlaEstoque());
         }
     }
 

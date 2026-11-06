@@ -56,7 +56,7 @@ public class EstoqueConsultaService {
 
     public PageResponse<EstoqueDto.PosicaoResponse> posicao(FiltroPosicao filtro, Pageable pageable) {
         Map<String, Object> params = new HashMap<>();
-        StringBuilder where = new StringBuilder(" WHERE 1 = 1");
+        StringBuilder where = new StringBuilder(" WHERE p.controla_estoque");
         if (filtro.nome() != null && !filtro.nome().isBlank()) {
             where.append(" AND (lower(p.nome) LIKE :nome OR lower(coalesce(p.codigo_interno, '')) LIKE :nome)");
             params.put("nome", "%" + filtro.nome().trim().toLowerCase() + "%");
@@ -95,7 +95,7 @@ public class EstoqueConsultaService {
                                count(*) FILTER (WHERE e.quantidade <= 0) AS zerados,
                                coalesce(sum(CASE WHEN e.quantidade > 0 THEN e.quantidade * p.custo_medio END), 0) AS valor
                         FROM produto p JOIN estoque e ON e.produto_id = p.id
-                        WHERE p.ativo
+                        WHERE p.ativo AND p.controla_estoque
                         """)
                 .query((rs, n) -> new EstoqueDto.ResumoResponse(rs.getLong("ativos"), rs.getLong("abaixo"),
                         rs.getLong("zerados"), rs.getBigDecimal("valor").setScale(2, RoundingMode.HALF_UP)))

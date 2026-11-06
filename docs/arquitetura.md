@@ -29,6 +29,8 @@ Pacote base `br.com.bar.gestao`. Cada módulo de negócio segue a mesma organiza
 | `catalogo` | categorias, unidades de medida, conversões, produtos e embalagens |
 | `fornecedor` | cadastro de fornecedores |
 | `receita` | receitas para consulta (ingredientes e modo de preparo em HTML limpo), independentes do resto |
+| `caixa` | sessões de caixa, suprimentos/retiradas e fechamento com conferência |
+| `venda` | PDV: registro idempotente, preço/custo congelados, baixa e estorno de estoque, histórico |
 | `estoque` | saldo, movimentações (histórico imutável), entradas/saídas/ajustes, inventário e consultas de posição |
 
 Regras de acoplamento:

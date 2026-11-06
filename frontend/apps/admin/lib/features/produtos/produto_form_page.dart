@@ -114,6 +114,7 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
       widget.unidades.where((u) => u.sigla == 'un').firstOrNull?.id;
   late String? _fornecedorId = _produto?.fornecedorPrincipalId;
   late bool _vendeNoCardapio = _produto?.vendeNoCardapio ?? true;
+  late bool _controlaEstoque = _produto?.controlaEstoque ?? true;
   late final List<_EmbalagemEdicao> _embalagens = [
     for (final e in _produto?.embalagens ?? const <Embalagem>[])
       _EmbalagemEdicao(
@@ -169,6 +170,7 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
         fornecedorPrincipalId: _fornecedorId,
         codigoInterno: _codigo.text.trim().isEmpty ? null : _codigo.text.trim(),
         vendeNoCardapio: _tipo.vendavel && _vendeNoCardapio,
+        controlaEstoque: _controlaEstoque,
         embalagens: [
           for (final e in _embalagens)
             (id: e.id, unidadeId: e.unidadeId!, descricao: e.descricao.text.trim(), fator: lerDecimal(e.fator.text)!),
@@ -405,6 +407,16 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
           _Secao(
             titulo: 'Estoque e custos',
             children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Controlar estoque'),
+                subtitle: Text(_controlaEstoque
+                    ? 'A venda baixa o estoque deste produto (bebidas, itens de revenda, ingredientes).'
+                    : 'Prato preparado: a venda registra faturamento e custo, sem movimentar estoque.'),
+                value: _controlaEstoque,
+                onChanged: (v) => setState(() => _controlaEstoque = v),
+              ),
+              const SizedBox(height: 8),
               _Linha([
                 DropdownButtonFormField<String>(
                   initialValue: _unidadeId,
@@ -434,7 +446,7 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
                   controller: _custo,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: 'Custo de aquisição *',
+                    labelText: _controlaEstoque ? 'Custo de aquisição *' : 'Custo de preparo (por unidade) *',
                     prefixText: r'R$ ',
                     suffixText: sigla.isEmpty ? null : 'por $sigla',
                     errorText: _erro?.campos['custoMedio'],

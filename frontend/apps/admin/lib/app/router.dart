@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_controller.dart';
 import '../features/auth/login_page.dart';
+import '../features/caixa/caixa_page.dart';
 import '../features/categorias/categorias_page.dart';
 import '../features/configuracoes/configuracoes_page.dart';
 import '../features/em_breve/em_breve_page.dart';
@@ -16,6 +17,8 @@ import '../features/produtos/produtos_page.dart';
 import '../features/receitas/receita_form_page.dart';
 import '../features/receitas/receita_page.dart';
 import '../features/receitas/receitas_page.dart';
+import '../features/vendas/pdv_page.dart';
+import '../features/vendas/vendas_page.dart';
 import 'menu.dart';
 import 'shell/admin_shell.dart';
 
@@ -46,6 +49,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/carregando', builder: (_, _) => const Scaffold(body: Carregando())),
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+      // PDV em tela cheia, fora do menu lateral do painel
+      GoRoute(path: '/pdv', builder: (_, _) => const PdvPage()),
       ShellRoute(
         builder: (context, state, child) => AdminShell(child: child),
         routes: [
@@ -59,6 +64,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, state) => ProdutoFormPage(produtoId: state.pathParameters['id']),
           ),
           GoRoute(path: '/categorias', builder: (_, _) => const CategoriasPage()),
+          GoRoute(
+            path: '/vendas',
+            builder: (_, state) => VendasPage(
+              key: ValueKey(state.uri.queryParameters['caixaId']),
+              caixaId: state.uri.queryParameters['caixaId'],
+            ),
+          ),
+          GoRoute(path: '/caixa', builder: (_, _) => const CaixaPage()),
           GoRoute(path: '/estoque', builder: (_, _) => const EstoquePage()),
           GoRoute(path: '/receitas', builder: (_, _) => const ReceitasPage()),
           GoRoute(path: '/receitas/nova', builder: (_, _) => const ReceitaFormPage()),

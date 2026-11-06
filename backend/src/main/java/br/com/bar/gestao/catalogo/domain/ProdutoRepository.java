@@ -27,9 +27,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, UUID>, JpaSpec
     @EntityGraph(attributePaths = {"categoria", "unidadeEstoque"})
     List<Produto> findByIdIn(Collection<UUID> ids);
 
-    @Query("select p.id from Produto p where p.ativo = true")
+    @Query("select p.id from Produto p where p.ativo = true and p.controlaEstoque = true")
     List<UUID> findIdsAtivos();
 
-    @Query("select p.id from Produto p where p.ativo = true and p.categoria.id = :categoriaId")
+    @Query("select p.id from Produto p where p.ativo = true and p.controlaEstoque = true and p.categoria.id = :categoriaId")
     List<UUID> findIdsAtivosPorCategoria(@Param("categoriaId") UUID categoriaId);
 }

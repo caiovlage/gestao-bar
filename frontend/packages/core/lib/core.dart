@@ -6,6 +6,7 @@ export 'api/api_exception.dart';
 export 'api/page_response.dart';
 export 'theme/app_theme.dart';
 export 'utils/formatadores.dart';
+export 'utils/identificadores.dart';
 export 'widgets/cabecalho_pagina.dart';
 export 'widgets/dialogos.dart';
 export 'widgets/estados.dart';

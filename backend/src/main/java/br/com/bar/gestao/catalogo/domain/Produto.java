@@ -72,6 +72,10 @@ public class Produto extends BaseEntity {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    /** Falso para pratos preparados: a venda registra faturamento e custo sem movimentar estoque. */
+    @Column(name = "controla_estoque", nullable = false)
+    private boolean controlaEstoque = true;
+
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("descricao")
     private List<ProdutoEmbalagem> embalagens = new ArrayList<>();
@@ -134,6 +138,14 @@ public class Produto extends BaseEntity {
         return Optional.of(precoVenda.subtract(custoMedio)
                 .multiply(BigDecimal.valueOf(100))
                 .divide(precoVenda, 2, RoundingMode.HALF_UP));
+    }
+
+    public void definirControleEstoque(boolean controlaEstoque) {
+        this.controlaEstoque = controlaEstoque;
+    }
+
+    public boolean isControlaEstoque() {
+        return controlaEstoque;
     }
 
     public void alterarStatus(boolean ativo) {

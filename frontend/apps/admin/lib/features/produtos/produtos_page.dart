@@ -283,6 +283,12 @@ class _Estoque extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!produto.controlaEstoque) {
+      return Tooltip(
+        message: 'Sem controle de estoque (prato preparado)',
+        child: Etiqueta('Sem estoque', cor: Colors.grey.shade600),
+      );
+    }
     final texto = '${formatarQuantidade(produto.estoqueAtual)} ${produto.unidadeEstoque.sigla}';
     if (!produto.abaixoMinimo) return Text(texto);
     return Tooltip(

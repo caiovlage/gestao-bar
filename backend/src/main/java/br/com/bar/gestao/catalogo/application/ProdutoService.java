@@ -200,6 +200,13 @@ public class ProdutoService {
         produto.atualizarDados(req.nome().trim(), descricao, categoria, req.tipo(), unidade, req.custoMedio(), preco,
                 req.estoqueMinimo(), req.fornecedorPrincipalId(), codigo, cardapio);
         produto.sincronizarEmbalagens(embalagens(req.embalagens(), novo));
+
+        boolean controla = req.controlarEstoque();
+        if (!controla && !novo && produto.isControlaEstoque() && estoqueService.quantidade(produto.getId()).signum() != 0) {
+            throw new NegocioException("PRODUTO_COM_SALDO",
+                    "Zere o estoque de " + produto.getNome() + " antes de desligar o controle de estoque.");
+        }
+        produto.definirControleEstoque(controla);
     }
 
     private List<Produto.DadosEmbalagem> embalagens(List<ProdutoDto.EmbalagemRequest> itens, boolean novo) {
