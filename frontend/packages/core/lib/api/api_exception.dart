@@ -57,5 +57,8 @@ String mensagemDeErro(Object erro) {
   if (erro is String) return erro;
   if (erro is ApiException) return erro.mensagem;
   if (erro is DioException) return ApiException.fromDio(erro).mensagem;
+  // Erro fora da API: registra no console (F12 no navegador) para diagnóstico.
+  // ignore: avoid_print
+  print('Erro inesperado (${erro.runtimeType}): $erro');
   return 'Ocorreu um erro inesperado.';
 }

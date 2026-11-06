@@ -41,7 +41,7 @@ class AuthController extends AsyncNotifier<Sessao?> {
         .post('/api/auth/login', corpo: {'login': login, 'senha': senha}) as Map<String, dynamic>;
     await ref.read(tokenStorageProvider).salvar(
           token: dados['token'] as String,
-          expiraEm: DateTime.parse(dados['expiraEm'] as String),
+          expiraEm: _lerInstante(dados['expiraEm']),
           login: dados['login'] as String,
         );
     state = AsyncData(Sessao(dados['login'] as String));
@@ -50,6 +50,14 @@ class AuthController extends AsyncNotifier<Sessao?> {
   Future<void> sair() async {
     await ref.read(tokenStorageProvider).limpar();
     state = const AsyncData(null);
+  }
+
+  /// Aceita data ISO-8601 ("2026-11-07T04:51:23Z") ou segundos desde 1970 (número).
+  static DateTime _lerInstante(Object? valor) {
+    if (valor is num) {
+      return DateTime.fromMillisecondsSinceEpoch((valor * 1000).round(), isUtc: true);
+    }
+    return DateTime.tryParse('$valor') ?? DateTime.now().add(const Duration(hours: 12));
   }
 
   /// Chamado pelo cliente HTTP quando a API responde 401.
