@@ -27,7 +27,9 @@
 # Todo o script fica dentro de main(): o bash lê o arquivo inteiro antes de executar,
 # então um "git pull" que altere este arquivo não interfere na execução em andamento.
 main() {
-  set -euo pipefail
+  set -Eeuo pipefail
+  # Nenhuma falha silenciosa: mostra a linha e o comando que falhou.
+  trap 'printf "\n\033[31m✘ Falhou na linha %s: %s\033[0m\n" "$LINENO" "$BASH_COMMAND" >&2' ERR
 
   local RAIZ; RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   cd "$RAIZ"
@@ -95,7 +97,7 @@ main() {
     sudo usermod -aG docker "$USER"
     info "Usuário $USER adicionado ao grupo docker (vale a partir do próximo login)"
   fi
-  sudo systemctl enable --now docker >/dev/null 2>&1
+  sudo systemctl enable -q --now docker
   # Sem precisar sair e entrar de novo na sessão: usa sudo enquanto o grupo docker não valer.
   local DOCKER=(docker)
   docker info >/dev/null 2>&1 || DOCKER=(sudo docker)
@@ -213,8 +215,24 @@ main() {
   fi
 
   sudo nginx -t -q || erro "Configuração do nginx inválida (veja a mensagem acima)."
-  sudo systemctl enable --now nginx >/dev/null 2>&1
-  sudo systemctl reload nginx
+
+  # nginx iniciado manualmente (ex.: "sudo nginx") ocupa a porta 80 fora do systemd e
+  # impede o serviço de iniciar. Encerra essa instância para o systemd assumir.
+  if ! systemctl is-active --quiet nginx && pgrep -x nginx >/dev/null; then
+    aviso "nginx rodando fora do systemd (iniciado manualmente); reiniciando pelo systemd"
+    sudo nginx -s quit 2>/dev/null || sudo pkill -x nginx || true
+    sleep 2
+  fi
+  if systemctl is-active --quiet nginx; then
+    sudo systemctl reload nginx
+  else
+    sudo systemctl reset-failed nginx 2>/dev/null || true
+    if ! sudo systemctl start nginx; then
+      sudo journalctl -u nginx -n 15 --no-pager >&2 || true
+      erro "O nginx não iniciou (detalhes acima). Verifique se outro programa usa a porta 80: sudo ss -ltnp 'sport = :80'"
+    fi
+  fi
+  sudo systemctl enable -q nginx
   ok "nginx ativo"
 
   # ================================================================== 5. banco de dados
