@@ -34,14 +34,14 @@ class _ComprasPageState extends ConsumerState<ComprasPage> {
         ),
         Align(
           alignment: Alignment.centerLeft,
-          child: SegmentedButton<bool>(
+          child: RolavelNoCelular(child: SegmentedButton<bool>(
             segments: const [
               ButtonSegment(value: true, icon: Icon(Icons.lightbulb_outline), label: Text('Sugestões')),
               ButtonSegment(value: false, icon: Icon(Icons.list_alt), label: Text('Listas de compras')),
             ],
             selected: {_sugestoes},
             onSelectionChanged: (s) => setState(() => _sugestoes = s.first),
-          ),
+          )),
         ),
         const SizedBox(height: 16),
         if (_sugestoes) const _Sugestoes() else const _Listas(),
@@ -100,8 +100,8 @@ class _SugestoesState extends ConsumerState<_Sugestoes> {
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Wrap(spacing: 12, runSpacing: 12, crossAxisAlignment: WrapCrossAlignment.center, children: [
             Text('${selecionados.length} de ${lista.length} produto(s) selecionado(s)'),
-            SizedBox(
-              width: 260,
+            LarguraCampo(
+              largura: 260,
               child: DropdownButtonFormField<String?>(
                 initialValue: _fornecedorId,
                 isExpanded: true,
@@ -168,7 +168,7 @@ class _ListasState extends ConsumerState<_Listas> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Align(
         alignment: Alignment.centerLeft,
-        child: SegmentedButton<String>(
+        child: RolavelNoCelular(child: SegmentedButton<String>(
           segments: const [
             ButtonSegment(value: 'RASCUNHO', label: Text('Em aberto')),
             ButtonSegment(value: 'RECEBIDA', label: Text('Recebidas')),
@@ -177,7 +177,7 @@ class _ListasState extends ConsumerState<_Listas> {
           ],
           selected: {_status ?? ''},
           onSelectionChanged: (s) => setState(() => _status = s.first.isEmpty ? null : s.first),
-        ),
+        )),
       ),
       const SizedBox(height: 12),
       Card(

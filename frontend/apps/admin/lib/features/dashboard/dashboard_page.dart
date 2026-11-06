@@ -67,7 +67,7 @@ class _Conteudo extends StatelessWidget {
 
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (p.demonstracao) const FaixaDemonstracao(),
-        GradeResponsiva(children: [
+        GradeResponsiva(larguraItem: 230, children: [
           CartaoIndicador(
             titulo: 'Faturamento hoje',
             valor: formatarMoeda(i.faturamentoHoje),

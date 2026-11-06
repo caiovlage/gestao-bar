@@ -75,7 +75,7 @@ class _VendasPageState extends ConsumerState<VendasPage> {
                 if (periodo != null) controle.periodo(periodo);
               },
             ),
-          SegmentedButton<String>(
+          RolavelNoCelular(child: SegmentedButton<String>(
             segments: const [
               ButtonSegment(value: '', label: Text('Todas')),
               ButtonSegment(value: 'CONCLUIDA', label: Text('Concluídas')),
@@ -83,7 +83,7 @@ class _VendasPageState extends ConsumerState<VendasPage> {
             ],
             selected: {filtro.status ?? ''},
             onSelectionChanged: (s) => controle.status(s.first.isEmpty ? null : s.first),
-          ),
+          )),
         ]),
         const SizedBox(height: 16),
         Card(

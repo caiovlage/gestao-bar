@@ -16,7 +16,8 @@ abstract final class AppCores {
 
 abstract final class AppTheme {
   /// Tema do painel administrativo (claro, com menu lateral escuro).
-  static ThemeData admin() {
+  /// [compacto]: versão para celular (aplicada só em telas estreitas; desktop usa a normal).
+  static ThemeData admin({bool compacto = false}) {
     final esquema = ColorScheme.fromSeed(
       seedColor: AppCores.ambar,
       brightness: Brightness.light,
@@ -38,7 +39,10 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: esquema,
       scaffoldBackgroundColor: AppCores.fundo,
-      visualDensity: VisualDensity.standard,
+      visualDensity: compacto ? VisualDensity.compact : VisualDensity.standard,
+      dialogTheme: compacto
+          ? const DialogThemeData(insetPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 20))
+          : null,
       appBarTheme: const AppBarTheme(
         backgroundColor: AppCores.grafite,
         foregroundColor: Colors.white,
@@ -61,19 +65,21 @@ abstract final class AppTheme {
         focusedBorder: bordaCampo.copyWith(
           borderSide: const BorderSide(color: AppCores.ambarEscuro, width: 1.6),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: compacto
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 11)
+            : const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 46),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          minimumSize: Size(0, compacto ? 40 : 46),
+          padding: EdgeInsets.symmetric(horizontal: compacto ? 14 : 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 46),
+          minimumSize: Size(0, compacto ? 40 : 46),
           foregroundColor: AppCores.grafite,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),

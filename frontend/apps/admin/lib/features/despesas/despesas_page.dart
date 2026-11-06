@@ -54,7 +54,9 @@ class DespesasPage extends ConsumerWidget {
         Row(children: [
           IconButton.outlined(tooltip: 'Mês anterior', onPressed: () => controle.avancar(-1), icon: const Icon(Icons.chevron_left)),
           const SizedBox(width: 12),
-          Text('${_meses[mes.month - 1]} de ${mes.year}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Flexible(
+            child: Text('${_meses[mes.month - 1]} de ${mes.year}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          ),
           const SizedBox(width: 12),
           IconButton.outlined(tooltip: 'Próximo mês', onPressed: () => controle.avancar(1), icon: const Icon(Icons.chevron_right)),
         ]),

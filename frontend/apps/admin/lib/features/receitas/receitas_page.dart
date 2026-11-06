@@ -43,8 +43,8 @@ class _ReceitasPageState extends ConsumerState<ReceitasPage> {
             ),
           ],
         ),
-        SizedBox(
-          width: 360,
+        LarguraCampo(
+          largura: 360,
           child: TextField(
             controller: _busca,
             decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar receita'),
@@ -76,9 +76,9 @@ class _ReceitasPageState extends ConsumerState<ReceitasPage> {
                     ),
                   ),
                 )
-              : Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
+              : GradeResponsiva(
+                  larguraItem: 260,
+                  espaco: 16,
                   children: [for (final r in p.conteudo) _CartaoReceita(receita: r)],
                 ),
         ),

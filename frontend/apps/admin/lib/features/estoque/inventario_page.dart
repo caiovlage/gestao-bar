@@ -200,7 +200,7 @@ class _InventarioState extends ConsumerState<_Inventario> {
             ],
           ],
         ),
-        Wrap(spacing: 12, runSpacing: 12, children: [
+        GradeResponsiva(larguraItem: 160, colunasMinimas: 3, children: [
           _Indicador('Itens', '${_inv.totalItens}'),
           _Indicador('Contados', '${_inv.itensContados}'),
           _Indicador('Com diferença', '${_inv.itensComDiferenca}',
@@ -221,15 +221,15 @@ class _InventarioState extends ConsumerState<_Inventario> {
           runSpacing: 12,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            SizedBox(
-              width: 280,
+            LarguraCampo(
+              largura: 280,
               child: TextField(
                 controller: _busca,
                 onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar produto'),
               ),
             ),
-            SegmentedButton<_Filtro>(
+            RolavelNoCelular(child: SegmentedButton<_Filtro>(
               segments: const [
                 ButtonSegment(value: _Filtro.todos, label: Text('Todos')),
                 ButtonSegment(value: _Filtro.naoContados, label: Text('Não contados')),
@@ -237,7 +237,7 @@ class _InventarioState extends ConsumerState<_Inventario> {
               ],
               selected: {_filtro},
               onSelectionChanged: (s) => setState(() => _filtro = s.first),
-            ),
+            )),
           ],
         ),
         const SizedBox(height: 16),
@@ -278,14 +278,18 @@ class _Indicador extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = ehCelular(context);
     return SizedBox(
       width: 160,
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(c ? 10 : 14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(titulo, style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
-            Text(valor, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: cor)),
+            Text(titulo,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.grey.shade700, fontSize: c ? 12 : 13)),
+            Text(valor, style: TextStyle(fontSize: c ? 19 : 22, fontWeight: FontWeight.w700, color: cor)),
           ]),
         ),
       ),
@@ -300,6 +304,19 @@ class _LinhaItem extends StatelessWidget {
   final TextEditingController controller;
   final bool editavel;
   final VoidCallback aoAlterar;
+
+  Widget _campoContado() => editavel
+      ? TextField(
+          controller: controller,
+          onChanged: (_) => aoAlterar(),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(labelText: 'Contado', suffixText: item.unidadeSigla, isDense: true),
+        )
+      : Text(
+          item.quantidadeContada == null
+              ? 'não contado'
+              : 'contado: ${formatarQuantidade(item.quantidadeContada)} ${item.unidadeSigla}',
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -317,8 +334,9 @@ class _LinhaItem extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         runSpacing: 8,
         children: [
-          SizedBox(
-            width: 260,
+          LarguraCampo(
+            largura: 260,
+            larguraCelularInteira: true,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item.produtoNome, style: const TextStyle(fontWeight: FontWeight.w600)),
               Text(
@@ -328,6 +346,16 @@ class _LinhaItem extends StatelessWidget {
               ),
             ]),
           ),
+          if (ehCelular(context))
+            Row(children: [
+              Expanded(child: _campoContado()),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(textoDif,
+                    textAlign: TextAlign.right, style: TextStyle(color: corDif, fontWeight: FontWeight.w600)),
+              ),
+            ])
+          else
           Row(mainAxisSize: MainAxisSize.min, children: [
             SizedBox(
               width: 150,

@@ -119,8 +119,9 @@ class ResumoCaixa extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = caixa.totais;
-    Widget cartao(String titulo, String valor, {Color? cor, String? ajuda}) => SizedBox(
-          width: double.infinity,
+    final celular = ehCelular(context);
+    Widget cartao(String titulo, String valor, {Color? cor, String? ajuda, double largura = 170}) => SizedBox(
+          width: celular ? double.infinity : largura,
           child: Card(
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -137,7 +138,7 @@ class ResumoCaixa extends StatelessWidget {
             ),
           ),
         );
-    return GradeResponsiva(larguraItem: 170, children: [
+    final cartoes = <Widget>[
       cartao('Vendas', formatarMoeda(t.totalVendas),
           ajuda: '${t.quantidadeVendas} venda(s)${caixa.vendasCanceladas > 0 ? ' · ${caixa.vendasCanceladas} cancelada(s)' : ''}'),
       cartao('Lucro bruto', formatarMoeda(caixa.lucroBruto), cor: AppCores.sucesso, ajuda: 'vendas − custo'),
@@ -149,13 +150,16 @@ class ResumoCaixa extends StatelessWidget {
       cartao('Suprimentos', formatarMoeda(t.suprimentos)),
       cartao('Retiradas', formatarMoeda(t.retiradas)),
       cartao('Dinheiro esperado', formatarMoeda(t.saldoEsperado),
-          cor: AppCores.ambarEscuro, ajuda: 'na gaveta'),
+          cor: AppCores.ambarEscuro, ajuda: 'na gaveta', largura: 200),
       if (!caixa.aberto) ...[
         cartao('Dinheiro contado', formatarMoeda(caixa.saldoContado)),
         cartao('Diferença', formatarMoeda(caixa.diferenca),
             cor: (caixa.diferenca ?? 0) == 0 ? AppCores.sucesso : AppCores.perigo),
       ],
-    ]);
+    ];
+    return celular
+        ? GradeResponsiva(larguraItem: 170, children: cartoes)
+        : Wrap(spacing: 12, runSpacing: 12, children: cartoes);
   }
 }
 

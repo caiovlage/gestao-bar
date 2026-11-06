@@ -171,6 +171,16 @@ class _Kanban extends StatelessWidget {
             aoVer: aoVer,
           ),
       ];
+      if (ehCelular(context)) {
+        // Celular: colunas empilhadas (as vazias ficam por último)
+        final ordenadas = [...colunas.where((c) => c.pedidos.isNotEmpty), ...colunas.where((c) => c.pedidos.isEmpty)];
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          for (var i = 0; i < ordenadas.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            ordenadas[i],
+          ],
+        ]);
+      }
       if (largo) {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,

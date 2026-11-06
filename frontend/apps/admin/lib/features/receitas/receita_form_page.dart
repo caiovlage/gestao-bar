@@ -162,16 +162,16 @@ class _FormularioState extends ConsumerState<_Formulario> {
                   validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
                 ),
                 Wrap(spacing: 16, runSpacing: 12, children: [
-                  SizedBox(
-                    width: 260,
+                  LarguraCampo(
+                    largura: 260,
                     child: TextFormField(
                       controller: _rendimento,
                       maxLength: 60,
                       decoration: const InputDecoration(labelText: 'Rendimento', hintText: '4 porções'),
                     ),
                   ),
-                  SizedBox(
-                    width: 200,
+                  LarguraCampo(
+                    largura: 200,
                     child: TextFormField(
                       controller: _tempo,
                       keyboardType: TextInputType.number,

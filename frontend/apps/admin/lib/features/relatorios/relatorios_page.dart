@@ -29,14 +29,14 @@ class RelatoriosPage extends ConsumerWidget {
           subtitulo: '${formatarData(periodo.start)} a ${formatarData(periodo.end)}',
         ),
         Wrap(spacing: 12, runSpacing: 12, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          SegmentedButton<PeriodoRapido?>(
+          RolavelNoCelular(child: SegmentedButton<PeriodoRapido?>(
             emptySelectionAllowed: true,
             segments: [for (final r in PeriodoRapido.values) ButtonSegment(value: r, label: Text(r.rotulo))],
             selected: {if (rapido != null) rapido},
             onSelectionChanged: (s) {
               if (s.isNotEmpty && s.first != null) controle.mudar(s.first!.intervalo());
             },
-          ),
+          )),
           OutlinedButton.icon(
             icon: const Icon(Icons.date_range),
             label: const Text('Personalizado'),
@@ -87,7 +87,7 @@ class _Relatorio extends StatelessWidget {
 
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (p.demonstracao) const FaixaDemonstracao(),
-        GradeResponsiva(children: [
+        GradeResponsiva(larguraItem: 230, children: [
           CartaoIndicador(
             titulo: 'Faturamento',
             valor: formatarMoeda(i.faturamento),

@@ -23,6 +23,10 @@ class AdminApp extends ConsumerWidget {
       title: 'Gestão do Bar',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.admin(),
+      // No celular, versão compacta do tema; em tablet e computador nada muda.
+      builder: (context, child) => ehCelular(context)
+          ? Theme(data: AppTheme.admin(compacto: true), child: child ?? const SizedBox.shrink())
+          : child ?? const SizedBox.shrink(),
       routerConfig: ref.watch(routerProvider),
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [Locale('pt', 'BR')],

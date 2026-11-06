@@ -27,7 +27,7 @@ class EstoquePage extends ConsumerWidget {
         const SizedBox(height: 20),
         Align(
           alignment: Alignment.centerLeft,
-          child: SegmentedButton<SecaoEstoque>(
+          child: RolavelNoCelular(child: SegmentedButton<SecaoEstoque>(
             segments: const [
               ButtonSegment(value: SecaoEstoque.posicao, icon: Icon(Icons.inventory_2_outlined), label: Text('Posição')),
               ButtonSegment(value: SecaoEstoque.movimentacoes, icon: Icon(Icons.swap_vert), label: Text('Movimentações')),
@@ -35,7 +35,7 @@ class EstoquePage extends ConsumerWidget {
             ],
             selected: {secao},
             onSelectionChanged: (s) => ref.read(secaoEstoqueProvider.notifier).mudar(s.first),
-          ),
+          )),
         ),
         const SizedBox(height: 16),
         switch (secao) {
@@ -63,9 +63,8 @@ class _CartoesResumo extends ConsumerWidget {
       ref.read(filtroPosicaoProvider.notifier).situacao(s);
     }
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
+    return GradeResponsiva(
+      larguraItem: 220,
       children: [
         _Cartao(
           icone: Icons.attach_money,
@@ -110,6 +109,7 @@ class _Cartao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = ehCelular(context);
     return SizedBox(
       width: 220,
       child: Card(
@@ -117,7 +117,7 @@ class _Cartao extends StatelessWidget {
         child: InkWell(
           onTap: aoTocar,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(c ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -127,8 +127,16 @@ class _Cartao extends StatelessWidget {
                   Expanded(child: Text(titulo, style: TextStyle(color: Colors.grey.shade700, fontSize: 13))),
                 ]),
                 const SizedBox(height: 8),
-                Text(valor, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: cor)),
-                if (ajuda != null) Text(ajuda!, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(valor, style: TextStyle(fontSize: c ? 19 : 22, fontWeight: FontWeight.w700, color: cor)),
+                ),
+                if (ajuda != null)
+                  Text(ajuda!,
+                      maxLines: c ? 1 : null,
+                      overflow: c ? TextOverflow.ellipsis : null,
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
               ],
             ),
           ),
@@ -175,8 +183,8 @@ class _SecaoPosicaoState extends ConsumerState<_SecaoPosicao> {
           runSpacing: 12,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            SizedBox(
-              width: 300,
+            LarguraCampo(
+              largura: 300,
               child: TextField(
                 controller: _busca,
                 decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Produto ou código'),
@@ -186,8 +194,9 @@ class _SecaoPosicaoState extends ConsumerState<_SecaoPosicao> {
                 },
               ),
             ),
-            SizedBox(
-              width: 220,
+            LarguraCampo(
+              largura: 220,
+              larguraCelularInteira: true,
               child: DropdownButtonFormField<String?>(
                 key: ValueKey(categorias.length),
                 initialValue: categorias.any((c) => c.id == filtro.categoriaId) ? filtro.categoriaId : null,
@@ -200,12 +209,14 @@ class _SecaoPosicaoState extends ConsumerState<_SecaoPosicao> {
                 onChanged: controle.categoria,
               ),
             ),
-            SegmentedButton<SituacaoEstoque>(
-              segments: [
-                for (final s in SituacaoEstoque.values) ButtonSegment(value: s, label: Text(s.rotulo)),
-              ],
-              selected: {filtro.situacao},
-              onSelectionChanged: (s) => controle.situacao(s.first),
+            RolavelNoCelular(
+              child: SegmentedButton<SituacaoEstoque>(
+                segments: [
+                  for (final s in SituacaoEstoque.values) ButtonSegment(value: s, label: Text(s.rotulo)),
+                ],
+                selected: {filtro.situacao},
+                onSelectionChanged: (s) => controle.situacao(s.first),
+              ),
             ),
           ],
         ),
@@ -410,8 +421,9 @@ class _SecaoMovimentacoes extends ConsumerWidget {
                 label: Text(filtro.produtoNome ?? 'Produto'),
                 onDeleted: () => controle.produto(null, null),
               ),
-            SizedBox(
-              width: 240,
+            LarguraCampo(
+              largura: 240,
+              larguraCelularInteira: true,
               child: DropdownButtonFormField<TipoMovimentacao?>(
                 initialValue: filtro.tipo,
                 isExpanded: true,
@@ -529,19 +541,33 @@ class _SecaoInventarios extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(children: [
-          Expanded(
-            child: Text(
+        if (ehCelular(context))
+          Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(
               'Conte o estoque físico e o sistema ajusta as diferenças. Pode salvar a contagem aos poucos.',
-              style: TextStyle(color: Colors.grey.shade700),
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
             ),
-          ),
-          FilledButton.icon(
-            onPressed: () => _novo(context, ref),
-            icon: const Icon(Icons.add),
-            label: const Text('Novo inventário'),
-          ),
-        ]),
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              onPressed: () => _novo(context, ref),
+              icon: const Icon(Icons.add),
+              label: const Text('Novo inventário'),
+            ),
+          ])
+        else
+          Row(children: [
+            Expanded(
+              child: Text(
+                'Conte o estoque físico e o sistema ajusta as diferenças. Pode salvar a contagem aos poucos.',
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: () => _novo(context, ref),
+              icon: const Icon(Icons.add),
+              label: const Text('Novo inventário'),
+            ),
+          ]),
         const SizedBox(height: 16),
         Card(
           clipBehavior: Clip.antiAlias,

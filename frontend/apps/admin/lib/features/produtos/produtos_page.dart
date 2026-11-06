@@ -86,8 +86,8 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
           runSpacing: 12,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            SizedBox(
-              width: 320,
+            LarguraCampo(
+              largura: 320,
               child: TextField(
                 controller: _busca,
                 onChanged: _aoDigitar,
@@ -97,8 +97,8 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
                 ),
               ),
             ),
-            SizedBox(
-              width: 220,
+            LarguraCampo(
+              largura: 220,
               child: DropdownButtonFormField<String?>(
                 // recria o campo quando as categorias terminam de carregar
                 key: ValueKey(categorias.length),
@@ -112,8 +112,8 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
                 onChanged: controle.categoria,
               ),
             ),
-            SizedBox(
-              width: 220,
+            LarguraCampo(
+              largura: 220,
               child: DropdownButtonFormField<TipoProduto?>(
                 initialValue: filtro.tipo,
                 isExpanded: true,
@@ -125,7 +125,8 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
                 onChanged: controle.tipo,
               ),
             ),
-            SegmentedButton<int>(
+            RolavelNoCelular(
+              child: SegmentedButton<int>(
               segments: const [
                 ButtonSegment(value: 1, label: Text('Ativos')),
                 ButtonSegment(value: 0, label: Text('Inativos')),
@@ -133,6 +134,7 @@ class _ProdutosPageState extends ConsumerState<ProdutosPage> {
               ],
               selected: {filtro.ativo == null ? 2 : (filtro.ativo! ? 1 : 0)},
               onSelectionChanged: (s) => controle.ativo(switch (s.first) { 1 => true, 0 => false, _ => null }),
+            ),
             ),
           ],
         ),

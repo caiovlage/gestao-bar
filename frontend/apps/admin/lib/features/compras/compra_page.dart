@@ -246,8 +246,8 @@ class _FormularioState extends ConsumerState<_Formulario> {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Wrap(spacing: 16, runSpacing: 12, children: [
-            SizedBox(
-              width: 320,
+            LarguraCampo(
+              largura: 320,
               child: DropdownButtonFormField<String?>(
                 initialValue: widget.fornecedores.any((f) => f.id == _fornecedorId) ? _fornecedorId : null,
                 isExpanded: true,
@@ -259,8 +259,8 @@ class _FormularioState extends ConsumerState<_Formulario> {
                 onChanged: _editavel ? (v) => setState(() => _fornecedorId = v) : null,
               ),
             ),
-            SizedBox(
-              width: 420,
+            LarguraCampo(
+              largura: 420,
               child: TextField(
                 controller: _obs,
                 enabled: _editavel,
@@ -316,10 +316,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
     final produto = _porId[l.produtoId];
     final opcoes = produto == null ? const <(String, String)>[] : _opcoes(produto);
     final nomeFora = widget.compra?.itens.where((i) => i.produtoId == l.produtoId).firstOrNull?.produtoNome;
-    return Padding(
-      key: ObjectKey(l),
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    final filhos = <Widget>[
         Expanded(
           flex: 5,
           child: DropdownMenu<String>(
@@ -390,6 +387,30 @@ class _FormularioState extends ConsumerState<_Formulario> {
             icon: const Icon(Icons.delete_outline),
             onPressed: () => setState(() => _linhas.removeAt(indice).dispose()),
           ),
+    ];
+    if (!ehCelular(context)) {
+      return Padding(
+        key: ObjectKey(l),
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: filhos),
+      );
+    }
+    // Celular: produto na linha de cima; quantidade, unidade e preço embaixo.
+    Widget campo(int i) => (filhos[i] as SizedBox).child!;
+    return Padding(
+      key: ObjectKey(l),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        (filhos[0] as Expanded).child,
+        const SizedBox(height: 8),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(flex: 2, child: campo(2)),
+          const SizedBox(width: 8),
+          Expanded(flex: 3, child: campo(4)),
+          const SizedBox(width: 8),
+          Expanded(flex: 3, child: campo(6)),
+          if (filhos.length > 7) filhos[7],
+        ]),
       ]),
     );
   }
