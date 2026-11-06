@@ -7,6 +7,8 @@ import '../features/auth/auth_controller.dart';
 import '../features/auth/login_page.dart';
 import '../features/caixa/caixa_page.dart';
 import '../features/categorias/categorias_page.dart';
+import '../features/compras/compra_page.dart';
+import '../features/compras/compras_page.dart';
 import '../features/configuracoes/configuracoes_page.dart';
 import '../features/em_breve/em_breve_page.dart';
 import '../features/estoque/estoque_page.dart';
@@ -72,6 +74,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(path: '/caixa', builder: (_, _) => const CaixaPage()),
+          GoRoute(path: '/compras', builder: (_, _) => const ComprasPage()),
+          GoRoute(path: '/compras/nova', builder: (_, _) => const CompraPage()),
+          GoRoute(path: '/compras/:id', builder: (_, state) => CompraPage(compraId: state.pathParameters['id'])),
           GoRoute(path: '/estoque', builder: (_, _) => const EstoquePage()),
           GoRoute(path: '/receitas', builder: (_, _) => const ReceitasPage()),
           GoRoute(path: '/receitas/nova', builder: (_, _) => const ReceitaFormPage()),

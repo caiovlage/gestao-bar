@@ -51,6 +51,13 @@ public class FornecedorService {
         return repository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Fornecedor", id));
     }
 
+    /** Nome de exibição do fornecedor (para outros módulos), ou null se não existir. */
+    @Transactional(readOnly = true)
+    public String nome(UUID id) {
+        if (id == null) return null;
+        return repository.findById(id).map(f -> f.getNomeFantasia() != null ? f.getNomeFantasia() : f.getNome()).orElse(null);
+    }
+
     /** Usado por outros módulos (produtos, compras) para validar a referência. */
     @Transactional(readOnly = true)
     public void validarExistente(UUID id) {

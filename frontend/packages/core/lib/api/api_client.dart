@@ -63,6 +63,16 @@ class ApiClient {
 
   Future<dynamic> delete(String caminho) => _executar(() => dio.delete(caminho));
 
+  /// Baixa um arquivo (ex.: PDF, Excel) como bytes, com o token de autenticação.
+  Future<List<int>> obterBytes(String caminho, {Map<String, dynamic>? query}) async {
+    final dados = await _executar(() => dio.get<List<int>>(
+          caminho,
+          queryParameters: _semNulos(query),
+          options: Options(responseType: ResponseType.bytes),
+        ));
+    return (dados as List<int>?) ?? const [];
+  }
+
   /// Envio de arquivo (multipart). [campo] é o nome do parâmetro esperado pela API.
   Future<dynamic> enviarArquivo(
     String caminho, {

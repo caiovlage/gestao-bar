@@ -32,6 +32,8 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
     implementation("org.jsoup:jsoup:1.24.1")
+    implementation("com.github.librepdf:openpdf:3.0.5")
+    implementation("org.apache.poi:poi-ooxml:6.0.0")
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")

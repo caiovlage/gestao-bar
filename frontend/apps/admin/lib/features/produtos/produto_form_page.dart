@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../app/widgets/leitor_codigo.dart';
 import '../categorias/categorias.dart';
+import '../compras/historico_custos.dart';
 import '../fornecedores/fornecedores.dart';
 import '../unidades/unidades.dart';
 import 'produto_imagem.dart';
@@ -464,6 +465,11 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
               ]),
             ],
           ),
+          if (_edicao && p!.controlaEstoque)
+            _Secao(
+              titulo: 'Histórico de preços de aquisição',
+              children: [HistoricoCustos(produtoId: p.id, unidadeSigla: p.unidadeEstoque.sigla)],
+            ),
           if (_tipo.vendavel)
             _Secao(
               titulo: 'Venda',

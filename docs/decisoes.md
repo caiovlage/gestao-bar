@@ -64,6 +64,17 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 | 36 | **Comprovante interno** em texto (não fiscal), exibido na tela com opção de copiar | Impressão direta fica para depois (exige integração com impressora). |
 | 37 | PDV em **tela cheia**, separado do painel; busca por nome e por **código (leitor USB + Enter adiciona ao carrinho)** | Operação rápida no balcão. |
 
+## Etapa 5 — Compras
+
+| # | Decisão | Motivo |
+|---|---|---|
+| 38 | **Sugestão de reposição** = estoque mínimo − saldo atual, para produtos ativos com controle de estoque; arredondada para cima na **maior embalagem** do produto (ex.: faltam 36 latas → 3 caixas de 12) | Exemplo da especificação; compra-se em embalagens fechadas. |
+| 39 | Lista de compras = compra em **rascunho** (editável, exportável em PDF/Excel); o **recebimento** dá entrada no estoque e encerra a lista | Um único registro do pedido ao recebimento. |
+| 40 | **Custo médio ponderado** no recebimento: (saldo × custo atual + quantidade × custo da compra) ÷ (saldo + quantidade); com saldo zerado, vale o custo da compra | Custo mais fiel que o último preço; base do lucro das vendas. |
+| 41 | **Histórico de preços** por recebimento (custo por unidade de estoque, fornecedor, custo médio antes/depois), exibido no cadastro do produto | Acompanhar a variação dos fornecedores. |
+| 42 | O item de compra guarda **cópia** da embalagem ("Caixa 12") e da quantidade convertida, sem chave estrangeira para a embalagem | Embalagens podem ser removidas do cadastro sem quebrar o histórico. |
+| 43 | Pratos sem controle de estoque não entram em compras | Não há estoque a repor. |
+
 ## Próximas etapas — sugestões a validar
 
 - **Reserva de estoque** de pedidos web no momento do **aceite** (não no recebimento), liberada ao cancelar.

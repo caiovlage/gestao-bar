@@ -152,6 +152,11 @@ public class Produto extends BaseEntity {
         this.ativo = ativo;
     }
 
+    /** Custo médio recalculado pelo recebimento de compras (custo médio ponderado). */
+    public void atualizarCustoMedio(BigDecimal custoMedio) {
+        this.custoMedio = custoMedio;
+    }
+
     public void definirImagem(String imagemUrl) {
         this.imagemUrl = imagemUrl;
     }
