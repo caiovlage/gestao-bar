@@ -56,17 +56,18 @@ class _Conteudo extends StatelessWidget {
     final i = p.indicadores;
     return LayoutBuilder(builder: (context, c) {
       final largo = c.maxWidth >= 1050;
+      final esp = c.maxWidth < larguraCelular ? 12.0 : 16.0;
       Widget lado(Widget a, Widget b, {int fa = 3, int fb = 2}) => largo
           ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(flex: fa, child: a),
               const SizedBox(width: 16),
               Expanded(flex: fb, child: b),
             ])
-          : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [a, const SizedBox(height: 16), b]);
+          : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [a, SizedBox(height: esp), b]);
 
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (p.demonstracao) const FaixaDemonstracao(),
-        Wrap(spacing: 12, runSpacing: 12, children: [
+        GradeResponsiva(children: [
           CartaoIndicador(
             titulo: 'Faturamento hoje',
             valor: formatarMoeda(i.faturamentoHoje),
@@ -110,7 +111,7 @@ class _Conteudo extends StatelessWidget {
             cor: p.produtosAbaixoMinimo > 0 ? AppCores.perigo : AppCores.sucesso,
           ),
         ]),
-        const SizedBox(height: 16),
+        SizedBox(height: esp),
         lado(
           PainelCard(
             titulo: 'Faturamento e lucro bruto por dia',
@@ -127,7 +128,7 @@ class _Conteudo extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: esp),
         lado(
           PainelCard(
             titulo: 'Horários de maior movimento',
@@ -150,7 +151,7 @@ class _Conteudo extends StatelessWidget {
           fa: 3,
           fb: 2,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: esp),
         lado(
           PainelCard(
             titulo: 'Produtos mais lucrativos',

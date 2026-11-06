@@ -27,21 +27,33 @@ class FaixaDemonstracao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final celular = ehCelular(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: EdgeInsets.only(bottom: celular ? 12 : 16),
+      padding: EdgeInsets.symmetric(horizontal: celular ? 12 : 16, vertical: celular ? 6 : 10),
       decoration: BoxDecoration(
         color: AppCores.ambar.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppCores.ambar.withValues(alpha: 0.5)),
       ),
       child: Row(children: [
-        const Icon(Icons.auto_awesome, color: AppCores.ambarEscuro),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Text('Dados de demonstração. Para ver os números reais do bar, desligue em Configurações.'),
+        Icon(Icons.auto_awesome, color: AppCores.ambarEscuro, size: celular ? 18 : 24),
+        SizedBox(width: celular ? 8 : 10),
+        Expanded(
+          child: Text(
+            celular
+                ? 'Dados de demonstração'
+                : 'Dados de demonstração. Para ver os números reais do bar, desligue em Configurações.',
+            style: TextStyle(fontSize: celular ? 13 : null, fontWeight: celular ? FontWeight.w600 : null),
+          ),
         ),
-        TextButton(onPressed: () => context.go('/configuracoes'), child: const Text('Configurações')),
+        TextButton(
+          style: celular
+              ? TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8))
+              : null,
+          onPressed: () => context.go('/configuracoes'),
+          child: Text(celular ? 'Desligar' : 'Configurações'),
+        ),
       ]),
     );
   }
@@ -57,7 +69,7 @@ class CartaoIndicador extends StatelessWidget {
     this.detalhe,
     this.variacao,
     this.cor = AppCores.ambarEscuro,
-    this.largura = 230,
+    this.largura,
   });
 
   final String titulo;
@@ -66,44 +78,56 @@ class CartaoIndicador extends StatelessWidget {
   final String? detalhe;
   final num? variacao;
   final Color cor;
-  final double largura;
+
+  /// Largura fixa; nula = ocupa a largura dada pelo pai (ex.: [GradeResponsiva]).
+  final double? largura;
 
   @override
   Widget build(BuildContext context) {
     final v = variacao;
+    final c = ehCelular(context);
     return SizedBox(
       width: largura,
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(c ? 12 : 16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: cor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                child: Icon(icone, color: cor, size: 20),
+                padding: EdgeInsets.all(c ? 6 : 8),
+                decoration: BoxDecoration(color: cor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(c ? 8 : 10)),
+                child: Icon(icone, color: cor, size: c ? 16 : 20),
               ),
-              const SizedBox(width: 10),
-              Expanded(child: Text(titulo, style: TextStyle(color: Colors.grey.shade700, fontSize: 13))),
+              SizedBox(width: c ? 8 : 10),
+              Expanded(
+                child: Text(titulo,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: c ? 12 : 13, height: 1.2)),
+              ),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: c ? 8 : 12),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-              child: Text(valor, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+              child: Text(valor, style: TextStyle(fontSize: c ? 19 : 24, fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: 4),
             Row(children: [
               if (v != null) ...[
                 Icon(v >= 0 ? Icons.trending_up : Icons.trending_down,
-                    size: 16, color: v >= 0 ? AppCores.sucesso : AppCores.perigo),
-                const SizedBox(width: 4),
+                    size: c ? 14 : 16, color: v >= 0 ? AppCores.sucesso : AppCores.perigo),
+                const SizedBox(width: 3),
                 Text('${v >= 0 ? '+' : ''}${formatarPercentual(v)}',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: v >= 0 ? AppCores.sucesso : AppCores.perigo)),
+                    style: TextStyle(
+                        fontSize: c ? 11 : 12, fontWeight: FontWeight.w700, color: v >= 0 ? AppCores.sucesso : AppCores.perigo)),
                 const SizedBox(width: 6),
               ],
               if (detalhe != null)
-                Expanded(child: Text(detalhe!, style: TextStyle(fontSize: 12, color: Colors.grey.shade600), overflow: TextOverflow.ellipsis)),
+                Expanded(
+                  child: Text(detalhe!,
+                      style: TextStyle(fontSize: c ? 11 : 12, color: Colors.grey.shade600), overflow: TextOverflow.ellipsis),
+                ),
             ]),
           ]),
         ),
@@ -123,11 +147,12 @@ class PainelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final celular = ehCelular(context);
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(celular ? 14 : 18),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(titulo, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          Text(titulo, style: TextStyle(fontWeight: FontWeight.w700, fontSize: celular ? 15 : 16)),
           if (subtitulo != null) Text(subtitulo!, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
           const SizedBox(height: 16),
           if (altura != null) SizedBox(height: altura, child: child) else child,

@@ -21,7 +21,7 @@ class AdminShell extends ConsumerWidget {
     final largura = MediaQuery.sizeOf(context).width;
     final conteudo = SelectionArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(largura < larguraTablet ? 16 : 28),
+        padding: EdgeInsets.all(largura < larguraCelular ? 12 : (largura < larguraTablet ? 16 : 28)),
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1400), child: child),

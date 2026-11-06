@@ -87,7 +87,7 @@ class _Relatorio extends StatelessWidget {
 
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (p.demonstracao) const FaixaDemonstracao(),
-        Wrap(spacing: 12, runSpacing: 12, children: [
+        GradeResponsiva(children: [
           CartaoIndicador(
             titulo: 'Faturamento',
             valor: formatarMoeda(i.faturamento),

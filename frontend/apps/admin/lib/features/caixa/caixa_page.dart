@@ -119,21 +119,25 @@ class ResumoCaixa extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = caixa.totais;
-    Widget cartao(String titulo, String valor, {Color? cor, String? ajuda, double largura = 170}) => SizedBox(
-          width: largura,
+    Widget cartao(String titulo, String valor, {Color? cor, String? ajuda}) => SizedBox(
+          width: double.infinity,
           child: Card(
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(titulo, style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
                 const SizedBox(height: 4),
-                Text(valor, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: cor)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(valor, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: cor)),
+                ),
                 if (ajuda != null) Text(ajuda, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
               ]),
             ),
           ),
         );
-    return Wrap(spacing: 12, runSpacing: 12, children: [
+    return GradeResponsiva(larguraItem: 170, children: [
       cartao('Vendas', formatarMoeda(t.totalVendas),
           ajuda: '${t.quantidadeVendas} venda(s)${caixa.vendasCanceladas > 0 ? ' · ${caixa.vendasCanceladas} cancelada(s)' : ''}'),
       cartao('Lucro bruto', formatarMoeda(caixa.lucroBruto), cor: AppCores.sucesso, ajuda: 'vendas − custo'),
@@ -145,7 +149,7 @@ class ResumoCaixa extends StatelessWidget {
       cartao('Suprimentos', formatarMoeda(t.suprimentos)),
       cartao('Retiradas', formatarMoeda(t.retiradas)),
       cartao('Dinheiro esperado', formatarMoeda(t.saldoEsperado),
-          cor: AppCores.ambarEscuro, ajuda: 'na gaveta', largura: 200),
+          cor: AppCores.ambarEscuro, ajuda: 'na gaveta'),
       if (!caixa.aberto) ...[
         cartao('Dinheiro contado', formatarMoeda(caixa.saldoContado)),
         cartao('Diferença', formatarMoeda(caixa.diferenca),
