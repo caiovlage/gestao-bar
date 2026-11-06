@@ -82,4 +82,58 @@ abstract final class AppTheme {
       dividerTheme: DividerThemeData(color: Colors.grey.shade200, space: 1),
     );
   }
+
+  /// Tema do cardápio digital do cliente: escuro e quente (grafite + âmbar), pensado para celular.
+  static ThemeData cardapio() {
+    const fundo = Color(0xFF15120F);
+    const superficie = Color(0xFF221D18);
+    final esquema = ColorScheme.fromSeed(seedColor: AppCores.ambar, brightness: Brightness.dark).copyWith(
+      primary: AppCores.ambar,
+      onPrimary: AppCores.sobreAmbar,
+      secondary: const Color(0xFFFBBF24),
+      surface: superficie,
+      onSurface: const Color(0xFFF5F0E8),
+      error: const Color(0xFFF87171),
+    );
+    final borda = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Color(0xFF3A322A)),
+    );
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: esquema,
+      scaffoldBackgroundColor: fundo,
+      appBarTheme: const AppBarTheme(backgroundColor: fundo, foregroundColor: Color(0xFFF5F0E8), elevation: 0),
+      cardTheme: CardThemeData(
+        color: superficie,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: superficie,
+        border: borda,
+        enabledBorder: borda,
+        focusedBorder: borda.copyWith(borderSide: const BorderSide(color: AppCores.ambar, width: 1.6)),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: superficie,
+        selectedColor: AppCores.ambar,
+        side: const BorderSide(color: Color(0xFF3A322A)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: superficie, showDragHandle: true),
+      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      dividerTheme: const DividerThemeData(color: Color(0xFF3A322A), space: 1),
+    );
+  }
 }

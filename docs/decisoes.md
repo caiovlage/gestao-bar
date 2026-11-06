@@ -87,6 +87,17 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 | 49 | **Despesas** com categorias fixas (água, luz, gás, aluguel, manutenção, limpeza, funcionários, impostos, outros), navegação por mês | Cadastro simples. |
 | 50 | Após o login, a tela inicial é o **Dashboard** | Pedido do responsável. |
 
-## Próximas etapas — sugestões a validar
+## Etapa 6 — Pedidos pelo cardápio digital
 
-- **Reserva de estoque** de pedidos web no momento do **aceite** (não no recebimento), liberada ao cancelar.
+| # | Decisão | Motivo |
+|---|---|---|
+| 51 | **App separado** (`apps/cardapio`, Flutter Web em `/cardapio/`), sem login e sem nenhum código do painel | Bundle menor no celular do cliente e nada administrativo exposto. |
+| 52 | QR Code por mesa com o local no link (`/cardapio/?mesa=12`, `?local=Balcão`), gerado e impresso em **Configurações** | O cliente não precisa digitar a mesa. |
+| 53 | Aparecem no cardápio os produtos **ativos, vendáveis, com preço, marcados "Vende no cardápio"** e de **categoria visível no cardápio**; produto controlado sem saldo disponível aparece como **esgotado** | Controle do que o cliente vê, sem expor custo nem estoque exato. |
+| 54 | O **preço é definido pelo servidor** no envio e fica congelado no pedido; a venda gerada usa esse preço, mesmo que o cadastro mude depois | O cliente paga o que viu; o app não envia preços. |
+| 55 | Envio **idempotente** (chave gerada por carrinho); limites: até 30 itens, 1–50 unidades por item, textos curtos; **até 20 pedidos por IP a cada 10 minutos** (IP real informado pelo nginx); chave "cardápio aberto" em Configurações | Evita duplicidade e abuso sem exigir cadastro do cliente. |
+| 56 | Pedido **não é venda**. Status de **preparo** (Recebido → Aceito → Em preparo → Pronto → Entregue, ou Cancelado) e **financeiro** (Pendente → Pago, ou Cancelado) são independentes | Requisito: só entra no faturamento ao pagar. |
+| 57 | **Reserva de estoque no aceite** (não no envio): o disponível do PDV diminui; sem saldo, o aceite falha e nada muda. Recusa/cancelamento liberam a reserva | Pedidos falsos não bloqueiam produtos; o que foi prometido ao cliente não é vendido no balcão. |
+| 58 | **Receber pagamento** (a partir do aceite, antes ou depois da entrega): trava o pedido, exige caixa aberto, libera a reserva e gera a **venda** (que baixa o estoque) com chave de idempotência = id do pedido; `venda.pedido_id` é único | Um pedido nunca gera duas vendas, mesmo com clique duplo. |
+| 59 | Pedido pago não é cancelado pela tela de pedidos: para desfazer, cancela-se a **venda** (estorno de estoque) | Uma única regra de estorno. |
+| 60 | Painel de pedidos em **kanban** com atualização a cada 10 s e destaque de pedidos novos; o cliente acompanha o status a cada 8 s, e o celular lembra os últimos pedidos | Sem WebSocket: simples e suficiente para o volume de um bar. |

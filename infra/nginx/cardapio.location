@@ -1,0 +1,8 @@
+    # ----------------------------------------------------------------- cardápio digital (cliente)
+    location /cardapio/ {
+        try_files $uri $uri/ /cardapio/index.html;
+        add_header Cache-Control "no-cache";
+    }
+
+    location = /cardapio { return 301 /cardapio/; }
+

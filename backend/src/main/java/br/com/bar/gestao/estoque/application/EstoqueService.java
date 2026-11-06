@@ -132,6 +132,41 @@ public class EstoqueService {
         return resultados;
     }
 
+    /** Item a reservar/liberar (na unidade de estoque). */
+    public record Reserva(UUID produtoId, String produtoNome, String unidadeSigla, BigDecimal quantidade) {
+    }
+
+    /**
+     * Reserva estoque para um pedido aceito: o saldo não muda, mas o disponível diminui, então
+     * o PDV não consegue vender o que já foi prometido ao cliente.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void reservar(List<Reserva> reservas) {
+        if (reservas.isEmpty()) return;
+        Map<UUID, Estoque> saldos = travar(reservas.stream().map(Reserva::produtoId).toList());
+        boolean permitirNegativo = configuracao.ativo(ConfiguracaoService.PERMITIR_ESTOQUE_NEGATIVO);
+        for (Reserva r : reservas) {
+            Estoque saldo = saldos.get(r.produtoId());
+            if (!permitirNegativo && saldo.getDisponivel().compareTo(r.quantidade()) < 0) {
+                throw new NegocioException("ESTOQUE_INSUFICIENTE", "Estoque insuficiente de " + r.produtoNome()
+                        + ": disponível " + texto(saldo.getDisponivel()) + " " + r.unidadeSigla()
+                        + ", pedido " + texto(r.quantidade()) + " " + r.unidadeSigla() + ".");
+            }
+            saldo.reservar(r.quantidade());
+        }
+        log.info("Estoque reservado: {} item(ns)", reservas.size());
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void liberar(List<Reserva> reservas) {
+        if (reservas.isEmpty()) return;
+        Map<UUID, Estoque> saldos = travar(reservas.stream().map(Reserva::produtoId).toList());
+        for (Reserva r : reservas) {
+            saldos.get(r.produtoId()).liberar(r.quantidade());
+        }
+        log.info("Reserva de estoque liberada: {} item(ns)", reservas.size());
+    }
+
     // ---------------------------------------------------------------- leitura
 
     @Transactional(readOnly = true)

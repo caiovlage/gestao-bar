@@ -40,6 +40,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return problema(HttpStatus.NOT_FOUND, "NAO_ENCONTRADO", ex.getMessage());
     }
 
+    @ExceptionHandler(LimiteExcedidoException.class)
+    public ProblemDetail limite(LimiteExcedidoException ex) {
+        return problema(HttpStatus.TOO_MANY_REQUESTS, "LIMITE_EXCEDIDO", ex.getMessage());
+    }
+
     @ExceptionHandler(AutenticacaoException.class)
     public ProblemDetail autenticacao(AutenticacaoException ex) {
         return problema(HttpStatus.UNAUTHORIZED, "NAO_AUTENTICADO", ex.getMessage());

@@ -49,6 +49,19 @@ public class VendaService {
 
     @Transactional
     public VendaDto.Detalhe registrar(VendaDto.RegistrarRequest req) {
+        return registrar(req, null, Map.of());
+    }
+
+    /**
+     * Venda gerada a partir de um pedido do cardápio: usa os preços do pedido (o que o cliente viu)
+     * e referencia o pedido de origem. A restrição única em venda.pedido_id impede duas vendas.
+     */
+    @Transactional
+    public VendaDto.Detalhe registrarDoPedido(UUID pedidoId, VendaDto.RegistrarRequest req, Map<UUID, BigDecimal> precos) {
+        return registrar(req, pedidoId, precos);
+    }
+
+    private VendaDto.Detalhe registrar(VendaDto.RegistrarRequest req, UUID pedidoId, Map<UUID, BigDecimal> precosPedido) {
         // Reenvio da mesma venda (duplo clique, rede instável): devolve a já registrada.
         Optional<Venda> existente = repository.findByChaveIdempotencia(req.chaveIdempotencia());
         if (existente.isPresent()) {
@@ -62,6 +75,7 @@ public class VendaService {
 
         Venda venda = new Venda(repository.proximoNumero(), req.chaveIdempotencia(), caixaId, req.formaPagamento(),
                 texto(req.observacao()));
+        venda.vincularPedido(pedidoId);
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal custoTotal = BigDecimal.ZERO;
         List<EstoqueService.Movimento> baixas = new ArrayList<>();
@@ -71,15 +85,20 @@ public class VendaService {
             if (p == null) {
                 throw new NegocioException("PRODUTO_INVALIDO", "Produto não encontrado.");
             }
-            if (!p.ativo() || !p.vendavel()) {
-                throw new NegocioException("PRODUTO_INDISPONIVEL", p.nome() + " não está disponível para venda.");
+            BigDecimal preco = precosPedido.get(p.id());
+            if (preco == null) {
+                // Venda direta do PDV: produto precisa estar à venda agora. Pedido aceito já foi prometido ao cliente.
+                if (!p.ativo() || !p.vendavel()) {
+                    throw new NegocioException("PRODUTO_INDISPONIVEL", p.nome() + " não está disponível para venda.");
+                }
+                if (p.precoVenda() == null) {
+                    throw new NegocioException("PRODUTO_SEM_PRECO", p.nome() + " não tem preço de venda cadastrado.");
+                }
+                preco = p.precoVenda();
             }
-            if (p.precoVenda() == null) {
-                throw new NegocioException("PRODUTO_SEM_PRECO", p.nome() + " não tem preço de venda cadastrado.");
-            }
-            BigDecimal total = VendaCalculo.valor(p.precoVenda(), item.quantidade());
+            BigDecimal total = VendaCalculo.valor(preco, item.quantidade());
             BigDecimal custo = VendaCalculo.valor(p.custoMedio(), item.quantidade());
-            venda.adicionarItem(p.id(), p.nome(), item.quantidade(), p.precoVenda(), p.custoMedio(), total, custo,
+            venda.adicionarItem(p.id(), p.nome(), item.quantidade(), preco, p.custoMedio(), total, custo,
                     p.controlaEstoque());
             subtotal = subtotal.add(total);
             custoTotal = custoTotal.add(custo);

@@ -103,6 +103,23 @@ sudo diff ~/gestao-bar/infra/nginx/gestao-bar.conf /etc/nginx/conf.d/gestao-bar.
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
+Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho** o bloco do cardápio
+(`location /cardapio/`, em `infra/nginx/cardapio.location`) e guarda a versão anterior em
+`/etc/nginx/conf.d/gestao-bar.conf.antes-cardapio`.
+
+### Cardápio digital (QR Code das mesas)
+
+- Endereço para o cliente: `http://SERVIDOR/cardapio/` (o mesmo nginx, porta 80).
+- Em **Configurações → Cardápio digital e QR Codes**, informe o número de mesas e outros locais
+  (ex.: Balcão) e clique em **Gerar QR Codes**; imprima com **Ctrl+P**. Cada QR Code abre o
+  cardápio com a mesa já preenchida (`/cardapio/?mesa=5`).
+- Só aparecem no cardápio produtos marcados **"Vende no cardápio"**, com preço, de categorias
+  visíveis no cardápio. Desligue **"Cardápio aberto para pedidos"** para pausar os pedidos.
+- Os pedidos chegam em **Pedidos** (atualiza a cada 10 s): aceitar (reserva o estoque), avançar o
+  preparo e **Receber** (gera a venda no caixa aberto).
+- A câmera do celular lê o QR Code normalmente mesmo sem HTTPS. Com domínio e HTTPS, gere os
+  QR Codes novamente acessando o painel pelo endereço `https://` (o link usa o endereço do painel).
+
 ---
 
 ## Problemas comuns

@@ -65,6 +65,17 @@ public class Estoque {
         return quantidade.subtract(quantidadeReservada);
     }
 
+    /** Reserva quantidade para um pedido aceito (não altera o saldo, só o disponível). */
+    public void reservar(BigDecimal quantidade) {
+        this.quantidadeReservada = this.quantidadeReservada.add(quantidade);
+    }
+
+    /** Libera reserva (pedido cancelado ou pago). Nunca fica negativa. */
+    public void liberar(BigDecimal quantidade) {
+        BigDecimal resto = this.quantidadeReservada.subtract(quantidade);
+        this.quantidadeReservada = resto.signum() < 0 ? BigDecimal.ZERO : resto;
+    }
+
     /** Soma (ou subtrai, se negativo) do saldo. Use somente via EstoqueService, com movimentação. */
     public void aplicar(BigDecimal delta) {
         this.quantidade = this.quantidade.add(delta);

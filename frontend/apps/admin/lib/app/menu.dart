@@ -16,8 +16,7 @@ class ItemMenu {
 const itensMenu = <ItemMenu>[
   ItemMenu('Dashboard', Icons.dashboard_outlined, '/dashboard'),
   ItemMenu('Vendas', Icons.point_of_sale_outlined, '/vendas'),
-  ItemMenu('Pedidos', Icons.receipt_long_outlined, '/pedidos', etapa: 6,
-      descricao: 'Pedidos do cardápio digital, status de preparo e registro de pagamento.'),
+  ItemMenu('Pedidos', Icons.receipt_long_outlined, '/pedidos'),
   ItemMenu('Produtos', Icons.inventory_2_outlined, '/produtos'),
   ItemMenu('Categorias', Icons.category_outlined, '/categorias'),
   ItemMenu('Receitas', Icons.menu_book_outlined, '/receitas'),

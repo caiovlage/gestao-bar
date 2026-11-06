@@ -13,7 +13,7 @@
 #    --forcar        descarta alterações locais e iguala o código ao GitHub
 #    -y, --sim       não pede confirmação (usado com --forcar)
 #    --limpo         recompila tudo do zero (sem cache do Flutter e do Docker)
-#    --so-painel     atualiza apenas o painel (frontend)
+#    --so-painel     atualiza apenas o frontend (painel e cardápio)
 #    --so-backend    atualiza apenas o backend
 #    --sem-pull      não baixa código novo do GitHub
 #    --sem-backup    não faz backup do banco antes de atualizar
@@ -55,6 +55,7 @@ main() {
 
   # ------------------------------------------------------------------ constantes
   local WEB_DIR=/var/www/gestao-bar/admin
+  local CARDAPIO_DIR=/var/www/gestao-bar/cardapio
   local NGINX_CONF=/etc/nginx/conf.d/gestao-bar.conf
   local FLUTTER_DIR=/opt/flutter
   local FLUTTER_MIN=3.47.0
@@ -182,8 +183,8 @@ main() {
 
   # ================================================================== 4. nginx
   passo "nginx (porta 80)"
-  if [[ ! -d "$WEB_DIR" || ! -w "$WEB_DIR" ]]; then
-    sudo mkdir -p "$WEB_DIR"
+  if [[ ! -d "$WEB_DIR" || ! -w "$WEB_DIR" || ! -d "$CARDAPIO_DIR" || ! -w "$CARDAPIO_DIR" ]]; then
+    sudo mkdir -p "$WEB_DIR" "$CARDAPIO_DIR"
     sudo chown -R "$USER": /var/www/gestao-bar
     sudo chmod 755 /var/www /var/www/gestao-bar
   fi
@@ -194,6 +195,25 @@ main() {
     [[ -f /etc/nginx/nginx.conf.antes-gestao-bar ]] || sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.antes-gestao-bar
     sudo sed -i 's/ default_server//' /etc/nginx/nginx.conf
     ok "Configuração instalada em $NGINX_CONF"
+  elif ! sudo grep -q 'location /cardapio/' "$NGINX_CONF"; then
+    # Instalação anterior à Etapa 6: acrescenta o cardápio sem tocar no resto (server_name/HTTPS).
+    info "Adicionando o cardápio digital (/cardapio/) à configuração do nginx"
+    sudo cp "$NGINX_CONF" "$NGINX_CONF.antes-cardapio"
+    if sudo grep -q 'location = / ' "$NGINX_CONF"; then
+      sudo awk -v trecho="$(cat infra/nginx/cardapio.location)" \
+          '!feito && /location = \/ /{print trecho; feito=1} {print}' "$NGINX_CONF.antes-cardapio" \
+          | sudo tee "$NGINX_CONF" >/dev/null
+      if sudo nginx -t -q 2>/dev/null; then
+        ok "Cardápio adicionado (cópia anterior: $NGINX_CONF.antes-cardapio)"
+      else
+        sudo cp "$NGINX_CONF.antes-cardapio" "$NGINX_CONF"
+        aviso "Não foi possível adicionar o cardápio automaticamente; configuração anterior restaurada."
+        aviso "Copie manualmente o bloco de infra/nginx/cardapio.location para $NGINX_CONF."
+      fi
+    else
+      aviso "Não encontrei 'location = /' em $NGINX_CONF. Copie manualmente o bloco de"
+      aviso "infra/nginx/cardapio.location para dentro do bloco server da porta 80/443."
+    fi
   elif ! sudo diff -q infra/nginx/gestao-bar.conf "$NGINX_CONF" >/dev/null 2>&1; then
     aviso "A configuração do nginx do repositório difere da instalada (mantida a instalada,"
     aviso "pois pode ter server_name/HTTPS). Compare: sudo diff infra/nginx/gestao-bar.conf $NGINX_CONF"
@@ -258,19 +278,30 @@ main() {
     ok "Backup: $ARQUIVO ($(du -h "$ARQUIVO" | cut -f1))"
   fi
 
-  # ================================================================== 6. painel (frontend)
+  # ================================================================== 6. frontend (painel e cardápio)
   if [[ $PAINEL -eq 1 ]]; then
-    passo "Painel web (frontend)"
+    passo "Frontend: painel e cardápio digital"
     if [[ ! -d frontend/apps/admin/web ]]; then
       (cd frontend/apps/admin && flutter create . --platforms=web --project-name gestao_bar_admin --no-pub >/dev/null)
     fi
-    [[ $LIMPO -eq 0 ]] || (cd frontend/apps/admin && flutter clean >/dev/null)
+    if [[ ! -d frontend/apps/cardapio/web ]]; then
+      (cd frontend/apps/cardapio && flutter create . --platforms=web --project-name gestao_bar_cardapio --no-pub >/dev/null)
+      sed -i 's#<title>.*</title>#<title>Cardápio</title>#' frontend/apps/cardapio/web/index.html
+    fi
+    if [[ $LIMPO -eq 1 ]]; then
+      (cd frontend/apps/admin && flutter clean >/dev/null)
+      (cd frontend/apps/cardapio && flutter clean >/dev/null)
+    fi
     (cd frontend && flutter pub get >/dev/null)
-    # Sem API_URL: o painel chama a API na mesma origem (http://SERVIDOR/api/), via nginx na porta 80.
+    # Sem API_URL: os apps chamam a API na mesma origem (http://SERVIDOR/api/), via nginx na porta 80.
+    info "Compilando o painel (/admin/)"
     (cd frontend/apps/admin && flutter build web --release --base-href /admin/)
+    info "Compilando o cardápio (/cardapio/)"
+    (cd frontend/apps/cardapio && flutter build web --release --base-href /cardapio/)
     rsync -a --delete frontend/apps/admin/build/web/ "$WEB_DIR/"
+    rsync -a --delete frontend/apps/cardapio/build/web/ "$CARDAPIO_DIR/"
     if command -v restorecon >/dev/null; then sudo restorecon -R /var/www/gestao-bar; fi
-    ok "Publicado em $WEB_DIR"
+    ok "Publicado em $WEB_DIR e $CARDAPIO_DIR"
   fi
 
   # ================================================================== 7. backend
@@ -295,6 +326,7 @@ main() {
   passo "Verificação pela porta 80"
   local falhas=0
   verificar "Painel  http://localhost/admin/" "$(codigo_http http://127.0.0.1/admin/)" 200 || falhas=1
+  verificar "Cardápio http://localhost/cardapio/" "$(codigo_http http://127.0.0.1/cardapio/)" 200 || falhas=1
   verificar "API     http://localhost/api/   " "$(codigo_http http://127.0.0.1/api/admin/produtos)" 401 || falhas=1
   local MIGRATIONS
   MIGRATIONS="$("${DOCKER[@]}" compose exec -T postgres sh -c \
@@ -310,6 +342,7 @@ main() {
   local IP; IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
   titulo "Concluído"
   echo "   Acesse: http://${IP:-SERVIDOR}/   (painel em /admin/, API em /api/)"
+  echo "   Cardápio do cliente: http://${IP:-SERVIDOR}/cardapio/   (QR Codes das mesas em Configurações)"
   if [[ -n "$SENHA_ADMIN_GERADA" ]]; then
     echo
     echo "   Login inicial do painel:  admin  /  $SENHA_ADMIN_GERADA"

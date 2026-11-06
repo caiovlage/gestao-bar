@@ -8,3 +8,4 @@ environment:
 workspace:
   - packages/core
   - apps/admin
+  - apps/cardapio

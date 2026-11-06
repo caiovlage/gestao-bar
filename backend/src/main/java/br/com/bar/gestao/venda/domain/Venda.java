@@ -34,6 +34,10 @@ public class Venda extends BaseEntity {
     @Column(name = "caixa_id", nullable = false)
     private UUID caixaId;
 
+    /** Pedido do cardápio digital que originou a venda (no máximo uma venda por pedido). */
+    @Column(name = "pedido_id", unique = true)
+    private UUID pedidoId;
+
     @Column(name = "data_hora", nullable = false)
     private Instant dataHora;
 
@@ -95,6 +99,14 @@ public class Venda extends BaseEntity {
                               BigDecimal custoUnitario, BigDecimal total, BigDecimal custoTotal, boolean controlaEstoque) {
         itens.add(new VendaItem(this, itens.size() + 1, produtoId, produtoNome, quantidade, precoUnitario,
                 custoUnitario, total, custoTotal, controlaEstoque));
+    }
+
+    public void vincularPedido(UUID pedidoId) {
+        this.pedidoId = pedidoId;
+    }
+
+    public UUID getPedidoId() {
+        return pedidoId;
     }
 
     public void definirValores(BigDecimal subtotal, BigDecimal desconto, BigDecimal custoTotal,
