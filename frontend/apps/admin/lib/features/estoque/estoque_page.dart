@@ -74,7 +74,7 @@ class _CartoesResumo extends ConsumerWidget {
         ),
         _Cartao(
           icone: Icons.inventory_2_outlined,
-          titulo: 'Produtos ativos',
+          titulo: 'Com estoque controlado',
           valor: resumo == null ? '…' : '${resumo.produtosAtivos}',
           aoTocar: () => filtrar(SituacaoEstoque.todos),
         ),
@@ -230,7 +230,13 @@ class _SecaoPosicaoState extends ConsumerState<_SecaoPosicao> {
               aoTentarNovamente: () => ref.invalidate(posicaoEstoqueProvider),
             ),
             data: (p) => p.conteudo.isEmpty
-                ? const EstadoVazio(icone: Icons.inventory_2_outlined, titulo: 'Nenhum produto encontrado')
+                ? const EstadoVazio(
+                    icone: Icons.inventory_2_outlined,
+                    titulo: 'Nenhum produto com controle de estoque',
+                    descricao: 'Aqui aparecem só os produtos com controle de estoque ligado (bebidas, '
+                        'itens de revenda, ingredientes). Pratos preparados, com o controle desligado no '
+                        'cadastro, são vendidos sem estoque e não aparecem nesta lista.',
+                  )
                 : LayoutBuilder(builder: (context, c) {
                     final largo = c.maxWidth >= 900;
                     return Column(children: [
