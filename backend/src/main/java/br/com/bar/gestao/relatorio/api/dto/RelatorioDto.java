@@ -15,8 +15,6 @@ public final class RelatorioDto {
     }
 
     public record Painel(
-            /** true quando os dados são de demonstração (Configurações → Dados de demonstração). */
-            boolean demonstracao,
             LocalDate inicio,
             LocalDate fim,
             Indicadores indicadores,

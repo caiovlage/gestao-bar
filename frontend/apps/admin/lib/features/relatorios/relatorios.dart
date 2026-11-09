@@ -163,7 +163,6 @@ class ItemEstoque {
 
 class Painel {
   const Painel({
-    required this.demonstracao,
     required this.inicio,
     required this.fim,
     required this.indicadores,
@@ -179,7 +178,6 @@ class Painel {
     required this.abaixoMinimo,
   });
 
-  final bool demonstracao;
   final DateTime inicio;
   final DateTime fim;
   final Indicadores indicadores;
@@ -200,7 +198,6 @@ class Painel {
   factory Painel.fromJson(Map<String, dynamic> j) {
     final estoque = j['estoque'] as Map<String, dynamic>;
     return Painel(
-      demonstracao: j['demonstracao'] as bool,
       inicio: DateTime.parse(j['inicio'] as String),
       fim: DateTime.parse(j['fim'] as String),
       indicadores: Indicadores.fromJson(j['indicadores'] as Map<String, dynamic>),

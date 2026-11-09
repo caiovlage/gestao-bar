@@ -19,10 +19,9 @@ public class ConfiguracaoService {
     public static final String NOME_BAR = "nome_bar";
     public static final String CARDAPIO_ABERTO = "cardapio_aberto";
     public static final String PERMITIR_ESTOQUE_NEGATIVO = "permitir_estoque_negativo";
-    public static final String DADOS_DEMONSTRACAO = "dados_demonstracao";
 
     private static final Set<String> CHAVES_BOOLEANAS =
-            Set.of(CARDAPIO_ABERTO, PERMITIR_ESTOQUE_NEGATIVO, DADOS_DEMONSTRACAO);
+            Set.of(CARDAPIO_ABERTO, PERMITIR_ESTOQUE_NEGATIVO);
     private static final Logger log = LoggerFactory.getLogger(ConfiguracaoService.class);
 
     private final ConfiguracaoRepository repository;

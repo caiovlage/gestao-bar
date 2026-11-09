@@ -132,24 +132,10 @@ public class CardapioService {
         return secoes;
     }
 
-    /**
-     * Mais vendidos primeiro. Com os dados de demonstração ligados e poucas vendas reais, completa
-     * com outros produtos do cardápio (com foto primeiro), para a seção aparecer nas apresentações.
-     */
+    /** Mais vendidos primeiro (só produtos com venda no período). */
     private java.util.stream.Stream<ItemDisponivel> maisPedidos(List<ItemDisponivel> pedidos, Map<UUID, BigDecimal> vendidos) {
-        List<ItemDisponivel> comVenda = pedidos.stream().filter(i -> vendidos.containsKey(i.id()))
-                .sorted(Comparator.comparing((ItemDisponivel i) -> vendidos.get(i.id())).reversed())
-                .toList();
-        if (comVenda.size() >= 3 || !configuracao.ativo(ConfiguracaoService.DADOS_DEMONSTRACAO)) {
-            return comVenda.stream();
-        }
-        List<ItemDisponivel> resto = pedidos.stream().filter(i -> !vendidos.containsKey(i.id()))
-                .sorted(Comparator.comparing((ItemDisponivel i) -> i.imagemUrl() == null)
-                        .thenComparing(i -> i.id().toString()))
-                .toList();
-        List<ItemDisponivel> todos = new ArrayList<>(comVenda);
-        todos.addAll(resto);
-        return todos.stream();
+        return pedidos.stream().filter(i -> vendidos.containsKey(i.id()))
+                .sorted(Comparator.comparing((ItemDisponivel i) -> vendidos.get(i.id())).reversed());
     }
 
     /** Quantidade vendida por produto nos últimos 30 dias (vendas concluídas, inclusive as de pedidos). */

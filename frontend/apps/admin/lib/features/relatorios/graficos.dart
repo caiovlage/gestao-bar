@@ -1,7 +1,6 @@
 import 'package:core/core.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'relatorios.dart';
@@ -20,44 +19,6 @@ const coresGrafico = [
 final _compacto = NumberFormat.compactCurrency(locale: 'pt_BR', symbol: r'R$', decimalDigits: 0);
 
 String moedaCompacta(num v) => _compacto.format(v);
-
-/// Faixa avisando que os números são de demonstração.
-class FaixaDemonstracao extends StatelessWidget {
-  const FaixaDemonstracao({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final celular = ehCelular(context);
-    return Container(
-      margin: EdgeInsets.only(bottom: celular ? 12 : 16),
-      padding: EdgeInsets.symmetric(horizontal: celular ? 12 : 16, vertical: celular ? 6 : 10),
-      decoration: BoxDecoration(
-        color: AppCores.ambar.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppCores.ambar.withValues(alpha: 0.5)),
-      ),
-      child: Row(children: [
-        Icon(Icons.auto_awesome, color: AppCores.ambarEscuro, size: celular ? 18 : 24),
-        SizedBox(width: celular ? 8 : 10),
-        Expanded(
-          child: Text(
-            celular
-                ? 'Dados de demonstração'
-                : 'Dados de demonstração. Para ver os números reais do bar, desligue em Configurações.',
-            style: TextStyle(fontSize: celular ? 13 : null, fontWeight: celular ? FontWeight.w600 : null),
-          ),
-        ),
-        TextButton(
-          style: celular
-              ? TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8))
-              : null,
-          onPressed: () => context.go('/configuracoes'),
-          child: Text(celular ? 'Desligar' : 'Configurações'),
-        ),
-      ]),
-    );
-  }
-}
 
 /// Cartão de indicador (KPI) com ícone, valor, detalhe e variação opcional.
 class CartaoIndicador extends StatelessWidget {

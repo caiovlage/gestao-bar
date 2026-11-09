@@ -1,6 +1,5 @@
 package br.com.bar.gestao.relatorio.application;
 
-import br.com.bar.gestao.configuracao.application.ConfiguracaoService;
 import br.com.bar.gestao.relatorio.api.dto.RelatorioDto;
 import br.com.bar.gestao.shared.exception.NegocioException;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * Dashboard e relatórios gerenciais. Com "Dados de demonstração" ligado em Configurações,
- * devolve dados simulados; desligado, calcula a partir das vendas, despesas e estoque reais.
+ * Dashboard e relatórios gerenciais, calculados a partir das vendas, despesas e estoque reais.
  */
 @Service
 @Transactional(readOnly = true)
@@ -29,12 +27,10 @@ public class RelatorioService {
     private static final long MAXIMO_DIAS = 400;
 
     private final JdbcClient jdbc;
-    private final ConfiguracaoService configuracao;
     private final ZoneId fuso;
 
-    public RelatorioService(JdbcClient jdbc, ConfiguracaoService configuracao, @Value("${app.fuso-horario}") String fuso) {
+    public RelatorioService(JdbcClient jdbc, @Value("${app.fuso-horario}") String fuso) {
         this.jdbc = jdbc;
-        this.configuracao = configuracao;
         this.fuso = ZoneId.of(fuso);
     }
 
@@ -48,9 +44,6 @@ public class RelatorioService {
         }
         if (ChronoUnit.DAYS.between(inicio, fim) >= MAXIMO_DIAS) {
             throw new NegocioException("PERIODO_INVALIDO", "Consulte no máximo " + MAXIMO_DIAS + " dias por vez.");
-        }
-        if (configuracao.ativo(ConfiguracaoService.DADOS_DEMONSTRACAO)) {
-            return DadosDemonstracao.painel(inicio, fim, hoje());
         }
         return real(inicio, fim);
     }
@@ -107,7 +100,7 @@ public class RelatorioService {
                 Agregador.din(doDia.faturamento()), doDia.vendas(), Agregador.din(doMes.faturamento()), doMes.vendas());
 
         List<RelatorioDto.ProdutoRanking> produtos = agregador.produtos();
-        return new RelatorioDto.Painel(false, inicio, fim, indicadores, agregador.serieDiaria(),
+        return new RelatorioDto.Painel(inicio, fim, indicadores, agregador.serieDiaria(),
                 agregador.serieHoraria(), agregador.formas(), agregador.categorias(),
                 Agregador.maisVendidos(produtos), Agregador.maisLucrativos(produtos), baixoGiro(inicio, fim), estoque());
     }

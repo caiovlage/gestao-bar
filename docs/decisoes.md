@@ -79,8 +79,8 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 
 | # | Decisão | Motivo |
 |---|---|---|
-| 44 | **Dados de demonstração** ligáveis em Configurações (padrão: ligado), com faixa de aviso nas telas | Pedido do responsável, para apresentações; desligado, tudo vem dos dados reais. |
-| 45 | Simulação **determinística** (o mesmo dia gera sempre os mesmos números) e **consistente** (séries, rankings e totais vêm das mesmas vendas simuladas) | Números estáveis e coerentes na apresentação. |
+| 44 | ~~**Dados de demonstração** ligáveis em Configurações (padrão: ligado), com faixa de aviso nas telas | Pedido do responsável, para apresentações; desligado, tudo vem dos dados reais. *(removido — ver 67)* |
+| 45 | Simulação **determinística** (o mesmo dia gera sempre os mesmos números) e **consistente** (séries, rankings e totais vêm das mesmas vendas simuladas) | Números estáveis e coerentes na apresentação. *(removido — ver 67)* |
 | 46 | Um único endpoint (`/relatorios/painel`) serve dashboard e relatórios: indicadores, séries por dia e hora, formas de pagamento, categorias, mais vendidos/lucrativos, baixo giro e estoque | Simplicidade; cada tela usa o que precisa. |
 | 47 | Faturamento só com **vendas concluídas**; **lucro bruto** = vendas − custo dos produtos; **lucro líquido** = lucro bruto − despesas do período, com aviso de que só é completo com todas as despesas lançadas | Diferenciar margem bruta de lucro líquido (requisito). |
 | 48 | Variação do faturamento contra o **período anterior de mesma duração**; datas no fuso do bar; consulta limitada a 400 dias | Comparação justa e consultas leves. |
@@ -105,5 +105,6 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 | 62 | **Preço promocional** no produto, com data de término opcional (inclusive, no fuso do bar). Vale em todo lugar: PDV, cardápio e pedidos cobram o promocional; o preço normal aparece riscado | Uma regra só de preço; o cliente paga o que viu. |
 | 63 | **"Sugestão da casa"**: marcação manual no cadastro do produto | Destaque escolhido pelo bar. |
 | 64 | **Vitrine do cardápio configurável** (Configurações): seções Sugestões, Promoções, Mais pedidos, Menos pedidos e Novidades — liga/desliga, ordem, título e quantidade. O conteúdo é automático: promoções por maior desconto, mais/menos pedidos pelas vendas concluídas dos últimos 30 dias, novidades pela data de cadastro. Esgotados não entram na vitrine | Pedido do responsável: mudar o foco do dia (ex.: destacar os menos vendidos) sem mexer em produtos. |
-| 65 | Com dados de demonstração ligados e menos de 3 produtos vendidos, "Mais pedidos" é completado com produtos do cardápio (com foto primeiro) | A seção aparece nas apresentações mesmo sem vendas reais. |
+| 65 | Com dados de demonstração ligados e menos de 3 produtos vendidos, "Mais pedidos" é completado com produtos do cardápio (com foto primeiro) | A seção aparece nas apresentações mesmo sem vendas reais. *(removido — ver 67)* |
 | 66 | Visual do cardápio: preto quente e dourado, títulos em **Playfair Display** (fonte empacotada no app, licença OFL), carrossel para a primeira seção da vitrine, busca, filtros (promoções e categorias) e ordenação | Identidade de bar sofisticado, sem depender de fontes externas. |
+| 67 | **Dados de demonstração removidos**: dashboard, relatórios e "Mais pedidos" do cardápio usam sempre os dados reais; a configuração `dados_demonstracao` foi apagada (V10) | Pedido do responsável, para operar com os números reais do bar. |

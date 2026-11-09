@@ -57,7 +57,6 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
   late final _nomeBar = TextEditingController(text: widget.valores['nome_bar']);
   late bool _cardapioAberto = widget.valores['cardapio_aberto'] == 'true';
   late bool _estoqueNegativo = widget.valores['permitir_estoque_negativo'] == 'true';
-  late bool _demonstracao = widget.valores['dados_demonstracao'] != 'false';
   bool _salvando = false;
 
   @override
@@ -80,7 +79,6 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
         'nome_bar': _nomeBar.text.trim(),
         'cardapio_aberto': '$_cardapioAberto',
         'permitir_estoque_negativo': '$_estoqueNegativo',
-        'dados_demonstracao': '$_demonstracao',
       });
       ref.invalidate(_configuracoesProvider);
       ref.invalidate(painelDashboardProvider);
@@ -113,13 +111,6 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
             subtitle: const Text('Desative para impedir novos pedidos pelo QR Code'),
             value: _cardapioAberto,
             onChanged: (v) => setState(() => _cardapioAberto = v),
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Dados de demonstração no dashboard e relatórios'),
-            subtitle: const Text('Ligado: números simulados, para apresentações. Desligado: dados reais do bar.'),
-            value: _demonstracao,
-            onChanged: (v) => setState(() => _demonstracao = v),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,

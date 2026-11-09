@@ -86,7 +86,6 @@ class _Relatorio extends StatelessWidget {
           : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [a, const SizedBox(height: 16), b]);
 
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        if (p.demonstracao) const FaixaDemonstracao(),
         GradeResponsiva(larguraItem: 230, children: [
           CartaoIndicador(
             titulo: 'Faturamento',

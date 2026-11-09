@@ -10,39 +10,23 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Etapa 7 — dashboard/relatórios com dados de demonstração e com dados reais; despesas. */
+/** Etapa 7 — dashboard/relatórios com dados reais; despesas. */
 class RelatorioIntegrationTest extends IntegracaoBase {
-
-    private void demonstracao(boolean ligada) throws Exception {
-        mvc.perform(put("/api/admin/configuracoes").header("Authorization", token)
-                        .contentType("application/json").content("{\"dados_demonstracao\":\"%s\"}".formatted(ligada)))
-                .andExpect(status().isOk());
-    }
 
     private BigDecimal valor(String json, String caminho) {
         return new BigDecimal(String.valueOf((Object) JsonPath.read(json, caminho)));
     }
 
     @Test
-    void dadosDeDemonstracaoSaoConsistentesEDeterministicos() throws Exception {
-        demonstracao(true);
+    void painelDoPeriodoTemSeriesCompletas() throws Exception {
         String painel = corpo(getAuth("/api/admin/relatorios/painel?inicio=2026-10-01&fim=2026-10-31")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.demonstracao").value(true))
+                .andExpect(jsonPath("$.demonstracao").doesNotExist())
                 .andExpect(jsonPath("$.vendasPorDia.length()").value(31))
-                .andExpect(jsonPath("$.vendasPorHora.length()").value(24))
-                .andExpect(jsonPath("$.maisVendidos.length()").value(10)));
-        assertThat(valor(painel, "$.indicadores.faturamento")).isPositive();
-        assertThat(valor(painel, "$.indicadores.lucroBruto")).isLessThan(valor(painel, "$.indicadores.faturamento"));
-
-        // Mesmo período, mesmos números
-        String deNovo = corpo(getAuth("/api/admin/relatorios/painel?inicio=2026-10-01&fim=2026-10-31"));
-        assertThat(valor(deNovo, "$.indicadores.faturamento")).isEqualByComparingTo(valor(painel, "$.indicadores.faturamento"));
-
+                .andExpect(jsonPath("$.vendasPorHora.length()").value(24)));
         // A soma diária bate com o faturamento do período
         BigDecimal soma = BigDecimal.ZERO;
         for (Object v : JsonPath.<java.util.List<Object>>read(painel, "$.vendasPorDia[*].faturamento")) {
@@ -53,11 +37,10 @@ class RelatorioIntegrationTest extends IntegracaoBase {
 
     @Test
     void dadosReaisRefletemVendasEDespesas() throws Exception {
-        demonstracao(false);
-        try {
+        {
             String hoje = LocalDate.now(ZoneId.of("America/Sao_Paulo")).toString();
             String url = "/api/admin/relatorios/painel?inicio=" + hoje + "&fim=" + hoje;
-            String antes = corpo(getAuth(url).andExpect(jsonPath("$.demonstracao").value(false)));
+            String antes = corpo(getAuth(url));
 
             if (getAuth("/api/admin/caixa/atual").andReturn().getResponse().getStatus() == 204) {
                 postJson("/api/admin/caixa/abrir", "{\"saldoInicial\":0}").andExpect(status().isCreated());
@@ -86,8 +69,6 @@ class RelatorioIntegrationTest extends IntegracaoBase {
                     .andExpect(jsonPath("$.despesas[?(@.id == '%s')].categoria".formatted(despesa)).value("LUZ"));
             mvc.perform(delete("/api/admin/despesas/{id}", despesa).header("Authorization", token))
                     .andExpect(status().isNoContent());
-        } finally {
-            demonstracao(true);
         }
     }
 }

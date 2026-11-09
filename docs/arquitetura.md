@@ -33,7 +33,7 @@ Pacote base `br.com.bar.gestao`. Cada módulo de negócio segue a mesma organiza
 | `venda` | PDV: registro idempotente, preço/custo congelados, baixa e estorno de estoque, histórico |
 | `compra` | sugestões de reposição, listas de compras (PDF/Excel), recebimento, custo médio e histórico de preços |
 | `despesa` | despesas operacionais por categoria e período |
-| `relatorio` | dashboard e relatórios (dados reais ou de demonstração) |
+| `relatorio` | dashboard e relatórios a partir dos dados reais |
 | `pedido` | cardápio público, pedidos do cliente (idempotentes, limitados por IP), reserva de estoque no aceite, status de preparo e pagamento gerando venda |
 | `estoque` | saldo, movimentações (histórico imutável), entradas/saídas/ajustes, inventário e consultas de posição |
 
