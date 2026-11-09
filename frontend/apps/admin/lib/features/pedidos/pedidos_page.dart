@@ -312,7 +312,7 @@ class _CartaoPedidoState extends ConsumerState<_CartaoPedido> {
     ref.invalidate(vendasProvider);
     ref.invalidate(posicaoEstoqueProvider);
     ref.invalidate(catalogoPdvProvider);
-    if (mounted) mostrarSucesso(context, 'Pagamento do pedido nº ${pago.numero} registrado.');
+    if (mounted) mostrarSucesso(context, 'Venda do pedido nº ${pago.numero} concluída: já aparece em Vendas, Caixa e relatórios.');
   }
 
   @override
@@ -407,7 +407,7 @@ class _CartaoPedidoState extends ConsumerState<_CartaoPedido> {
                     FilledButton.icon(
                       onPressed: _receber,
                       icon: const Icon(Icons.payments_outlined),
-                      label: const Text('Receber'),
+                      label: const Text('Concluir venda'),
                     ),
                   if (p.status != StatusPreparo.recebido && !p.pago)
                     IconButton(
@@ -538,7 +538,7 @@ class _PagamentoPedidoDialogState extends ConsumerState<PagamentoPedidoDialog> {
     final troco = _troco;
 
     return AlertDialog(
-      title: Text('Receber pedido nº ${p.numero}'),
+      title: Text('Concluir venda · pedido nº ${p.numero}'),
       content: SizedBox(
         width: 440,
         child: SingleChildScrollView(
@@ -561,7 +561,7 @@ class _PagamentoPedidoDialogState extends ConsumerState<PagamentoPedidoDialog> {
                   child: Row(children: [
                     const Icon(Icons.lock_outline, color: AppCores.perigo),
                     const SizedBox(width: 8),
-                    const Expanded(child: Text('O caixa está fechado. Abra o caixa para receber.')),
+                    const Expanded(child: Text('O caixa está fechado. Abra o caixa para concluir a venda.')),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
@@ -622,7 +622,7 @@ class _PagamentoPedidoDialogState extends ConsumerState<PagamentoPedidoDialog> {
         FilledButton.icon(
           onPressed: _enviando || caixaFechado ? null : _confirmar,
           icon: const Icon(Icons.check),
-          label: const Text('Registrar pagamento'),
+          label: const Text('Concluir venda'),
         ),
       ],
     );

@@ -121,7 +121,7 @@ Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho
   (Sugestões da casa, Promoções, Mais pedidos, Menos pedidos, Novidades), a ordem, os títulos e a
   quantidade. Promoções e sugestões são definidas no cadastro de cada produto.
 - Os pedidos chegam em **Pedidos** (atualiza a cada 10 s) com bloco e apartamento: aceitar (reserva o
-  estoque), preparar, marcar pronto/entregue e **Receber** na entrega (gera a venda no caixa aberto).
+  estoque), preparar, marcar pronto/entregue e **Concluir venda** na entrega (gera a venda no caixa aberto).
 - O cardápio funciona sem HTTPS. Com domínio e HTTPS, compartilhe o link de novo acessando o painel
   pelo endereço `https://` (o link usa o endereço do painel).
 
