@@ -177,7 +177,6 @@ class _CardapioPageState extends State<CardapioPage> {
   }
 
   Widget _conteudo(Cardapio c) {
-    final local = localDoQrCode();
     final maisPedidos = c.maisPedidos;
     final largura = MediaQuery.sizeOf(context).width;
     final margem = largura > 760 ? (largura - 720) / 2 : 16.0;
@@ -199,7 +198,7 @@ class _CardapioPageState extends State<CardapioPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _Cabecalho(nomeBar: c.nomeBar, local: local, aoAtualizar: _recarregar),
+            _Cabecalho(nomeBar: c.nomeBar, aoAtualizar: _recarregar),
             SliverPersistentHeader(
               pinned: true,
               delegate: _BarraFiltros(
@@ -219,7 +218,7 @@ class _CardapioPageState extends State<CardapioPage> {
                 if (!c.aberto)
                   const _Aviso(
                     icone: Icons.nightlife_outlined,
-                    texto: 'No momento não estamos recebendo pedidos pelo cardápio. Chame um atendente.',
+                    texto: 'No momento não estamos recebendo pedidos. Tente novamente mais tarde.',
                   ),
               ]),
             ),
@@ -334,10 +333,9 @@ String _semAcento(String texto) {
 // =============================================================================
 
 class _Cabecalho extends StatelessWidget {
-  const _Cabecalho({required this.nomeBar, required this.local, required this.aoAtualizar});
+  const _Cabecalho({required this.nomeBar, required this.aoAtualizar});
 
   final String nomeBar;
-  final String? local;
   final VoidCallback aoAtualizar;
 
   static const _alturaAberta = 236.0;
@@ -388,21 +386,19 @@ class _Cabecalho extends StatelessWidget {
                     const SizedBox(height: 12),
                     const _Ornamento(),
                     const SizedBox(height: 12),
-                    if (local != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Paleta.ouroEscuro),
-                        ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.table_bar_outlined, size: 16, color: Paleta.ouro),
-                          const SizedBox(width: 6),
-                          Text(local!, style: const TextStyle(color: Paleta.ouroClaro, fontWeight: FontWeight.w600)),
-                        ]),
-                      )
-                    else
-                      Text('Cardápio', style: serifa(16, peso: FontWeight.w400, cor: Paleta.textoSuave)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Paleta.ouroEscuro),
+                      ),
+                      child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.delivery_dining_outlined, size: 16, color: Paleta.ouro),
+                        SizedBox(width: 6),
+                        Text('Entrega no seu apartamento',
+                            style: TextStyle(color: Paleta.ouroClaro, fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
                   ]),
                 ),
               ),
@@ -1020,7 +1016,7 @@ class _CardapioVazio extends StatelessWidget {
         Text('Cardápio em preparação', textAlign: TextAlign.center, style: serifa(24)),
         const SizedBox(height: 10),
         const Text(
-          'Estamos organizando os itens do cardápio digital.\nEnquanto isso, chame um atendente para fazer seu pedido.',
+          'Estamos organizando os itens do cardápio.\nVolte daqui a pouco para fazer seu pedido.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Paleta.textoSuave, height: 1.5),
         ),
@@ -1297,7 +1293,7 @@ class _Rodape extends StatelessWidget {
       child: Column(children: [
         _Ornamento(),
         SizedBox(height: 12),
-        Text('Pagamento no local, com o atendente.\nBeba com moderação.',
+        Text('Pagamento na entrega.\nBeba com moderação.',
             textAlign: TextAlign.center, style: TextStyle(color: Paleta.textoSuave, fontSize: 12, height: 1.6)),
       ]),
     );
@@ -1437,24 +1433,29 @@ class _CarrinhoSheet extends StatefulWidget {
 class _CarrinhoSheetState extends State<_CarrinhoSheet> {
   final _form = GlobalKey<FormState>();
   final _nome = TextEditingController();
-  final _local = TextEditingController(text: localDoQrCode() ?? '');
+  final _bloco = TextEditingController();
+  final _apartamento = TextEditingController();
   final _obs = TextEditingController();
-  final _localFixo = localDoQrCode() != null;
   bool _enviando = false;
   String? _erro;
 
   @override
   void initState() {
     super.initState();
-    Memoria.nome().then((n) {
-      if (n != null && _nome.text.isEmpty && mounted) _nome.text = n;
+    // Preenche com os dados do último pedido feito neste celular
+    Memoria.cliente().then((c) {
+      if (!mounted) return;
+      if (c.nome != null && _nome.text.isEmpty) _nome.text = c.nome!;
+      if (c.bloco != null && _bloco.text.isEmpty) _bloco.text = c.bloco!;
+      if (c.apartamento != null && _apartamento.text.isEmpty) _apartamento.text = c.apartamento!;
     });
   }
 
   @override
   void dispose() {
     _nome.dispose();
-    _local.dispose();
+    _bloco.dispose();
+    _apartamento.dispose();
     _obs.dispose();
     super.dispose();
   }
@@ -1467,8 +1468,12 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
     });
     try {
       final pedido = await enviarPedido(widget.carrinho,
-          nome: _nome.text.trim(), local: _local.text.trim(), observacao: _obs.text);
-      await Memoria.salvarNome(_nome.text.trim());
+          nome: _nome.text.trim(),
+          bloco: _bloco.text.trim(),
+          apartamento: _apartamento.text.trim(),
+          observacao: _obs.text);
+      await Memoria.salvarCliente(
+          nome: _nome.text.trim(), bloco: _bloco.text.trim(), apartamento: _apartamento.text.trim());
       await Memoria.lembrarPedido(pedido.id);
       widget.carrinho.limpar();
       if (mounted) Navigator.pop(context, pedido);
@@ -1534,7 +1539,7 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
                       Text(formatarMoeda(c.total), style: serifa(26, cor: Paleta.ouro)),
                     ]),
                     const SizedBox(height: 4),
-                    const Text('O pagamento é feito no local, com o atendente.',
+                    const Text('O pagamento é feito na entrega.',
                         style: TextStyle(color: Paleta.textoSuave, fontSize: 13)),
                     const SizedBox(height: 18),
                     TextFormField(
@@ -1545,18 +1550,35 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
                     ),
                     const SizedBox(height: 4),
-                    TextFormField(
-                      controller: _local,
-                      maxLength: 80,
-                      readOnly: _localFixo,
-                      decoration: InputDecoration(
-                        labelText: 'Mesa ou local',
-                        hintText: 'Ex.: Mesa 5, Balcão',
-                        prefixIcon: const Icon(Icons.table_bar_outlined),
-                        helperText: _localFixo ? 'Identificado pelo QR Code' : null,
+                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _bloco,
+                          maxLength: 20,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: const InputDecoration(
+                            labelText: 'Bloco',
+                            hintText: 'Ex.: B',
+                            prefixIcon: Icon(Icons.apartment_outlined),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o bloco' : null,
+                        ),
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe a mesa ou o local' : null,
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _apartamento,
+                          maxLength: 20,
+                          keyboardType: TextInputType.text,
+                          decoration: const InputDecoration(
+                            labelText: 'Apartamento',
+                            hintText: 'Ex.: 101',
+                            prefixIcon: Icon(Icons.door_front_door_outlined),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o apto.' : null,
+                        ),
+                      ),
+                    ]),
                     const SizedBox(height: 4),
                     TextFormField(
                       controller: _obs,

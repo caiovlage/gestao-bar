@@ -107,21 +107,23 @@ Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho
 (`location /cardapio/`, em `infra/nginx/cardapio.location`) e guarda a versão anterior em
 `/etc/nginx/conf.d/gestao-bar.conf.antes-cardapio`.
 
-### Cardápio digital (QR Code das mesas)
+### Cardápio digital (pedidos para entrega)
 
 - Endereço para o cliente: `http://SERVIDOR/cardapio/` (o mesmo nginx, porta 80).
-- Em **Configurações → Cardápio digital e QR Codes**, informe o número de mesas e outros locais
-  (ex.: Balcão) e clique em **Gerar QR Codes**; imprima com **Ctrl+P**. Cada QR Code abre o
-  cardápio com a mesa já preenchida (`/cardapio/?mesa=5`).
-- Só aparecem no cardápio produtos marcados **"Vende no cardápio"**, com preço, de categorias
-  visíveis no cardápio. Desligue **"Cardápio aberto para pedidos"** para pausar os pedidos.
+- Em **Configurações → Cardápio digital**, use **Compartilhar no WhatsApp** (ou copie o link) para
+  enviar aos moradores. O cliente abre no navegador do celular, escolhe os produtos e informa
+  **nome, bloco e apartamento**; o celular lembra esses dados para o próximo pedido. Há também um
+  QR Code único para cartazes (elevador, portaria).
+- Só aparecem no cardápio produtos marcados **"Disponível no cardápio digital"**, com preço, de
+  categorias visíveis no cardápio. Desligue **"Cardápio aberto para pedidos"** para pausar os
+  pedidos (ex.: sem entregadores).
 - **Vitrine** (Configurações → Vitrine do cardápio): escolha as seções de destaque do topo do cardápio
   (Sugestões da casa, Promoções, Mais pedidos, Menos pedidos, Novidades), a ordem, os títulos e a
   quantidade. Promoções e sugestões são definidas no cadastro de cada produto.
-- Os pedidos chegam em **Pedidos** (atualiza a cada 10 s): aceitar (reserva o estoque), avançar o
-  preparo e **Receber** (gera a venda no caixa aberto).
-- A câmera do celular lê o QR Code normalmente mesmo sem HTTPS. Com domínio e HTTPS, gere os
-  QR Codes novamente acessando o painel pelo endereço `https://` (o link usa o endereço do painel).
+- Os pedidos chegam em **Pedidos** (atualiza a cada 10 s) com bloco e apartamento: aceitar (reserva o
+  estoque), preparar, marcar pronto/entregue e **Receber** na entrega (gera a venda no caixa aberto).
+- O cardápio funciona sem HTTPS. Com domínio e HTTPS, compartilhe o link de novo acessando o painel
+  pelo endereço `https://` (o link usa o endereço do painel).
 
 ---
 

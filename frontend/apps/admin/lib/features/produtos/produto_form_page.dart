@@ -501,7 +501,7 @@ class _ProdutoFormularioState extends ConsumerState<_ProdutoFormulario> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Disponível no cardápio digital'),
-                  subtitle: const Text('Clientes poderão pedir este produto pelo QR Code'),
+                  subtitle: const Text('Clientes poderão pedir este produto pelo cardápio digital'),
                   value: _vendeNoCardapio,
                   onChanged: (v) => setState(() => _vendeNoCardapio = v),
                 ),

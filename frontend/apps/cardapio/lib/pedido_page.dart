@@ -107,7 +107,7 @@ class _PedidoPageState extends State<PedidoPage> {
                               ]),
                               const SizedBox(height: 4),
                               Text(
-                                p.pago ? 'Pagamento recebido. Obrigado!' : 'Pagamento no local, com o atendente.',
+                                p.pago ? 'Pagamento recebido. Obrigado!' : 'Pagamento na entrega.',
                                 style: TextStyle(
                                   color: p.pago ? Paleta.sucesso : Paleta.textoSuave,
                                   fontSize: 13,

@@ -61,7 +61,8 @@ public final class PedidoDto {
     public record CriarRequest(
             @NotNull UUID chaveIdempotencia,
             @NotBlank @Size(max = 80) String clienteNome,
-            @NotBlank @Size(max = 80) String local,
+            @NotBlank @Size(max = 20) String bloco,
+            @NotBlank @Size(max = 20) String apartamento,
             @Size(max = 500) String observacao,
             @NotNull @Size(min = 1, max = 30) @Valid List<ItemRequest> itens) {
     }
@@ -78,26 +79,30 @@ public final class PedidoDto {
     }
 
     /** O que o cliente vê ao acompanhar o pedido (sem dados internos). */
-    public record Acompanhamento(UUID id, long numero, String clienteNome, String local, String observacao,
+    public record Acompanhamento(UUID id, long numero, String clienteNome, String local, String bloco,
+                                 String apartamento, String observacao,
                                  Pedido.StatusPreparo statusPreparo, Pedido.StatusFinanceiro statusFinanceiro,
                                  BigDecimal total, List<ItemResponse> itens, Instant criadoEm,
                                  String motivoCancelamento) {
 
         public static Acompanhamento of(Pedido p) {
-            return new Acompanhamento(p.getId(), p.getNumero(), p.getClienteNome(), p.getLocal(), p.getObservacao(),
+            return new Acompanhamento(p.getId(), p.getNumero(), p.getClienteNome(), p.getLocal(), p.getBloco(),
+                    p.getApartamento(), p.getObservacao(),
                     p.getStatusPreparo(), p.getStatusFinanceiro(), p.getTotal(),
                     p.getItens().stream().map(ItemResponse::of).toList(), p.getCriadoEm(), p.getMotivoCancelamento());
         }
     }
 
-    public record Detalhe(UUID id, long numero, String clienteNome, String local, String observacao,
+    public record Detalhe(UUID id, long numero, String clienteNome, String local, String bloco, String apartamento,
+                          String observacao,
                           Pedido.StatusPreparo statusPreparo, Pedido.StatusFinanceiro statusFinanceiro,
                           BigDecimal total, List<ItemResponse> itens, boolean estoqueReservado,
                           String motivoCancelamento, UUID vendaId, Instant criadoEm, Instant aceitoEm,
                           Instant prontoEm, Instant entregueEm, Instant pagoEm, Instant canceladoEm) {
 
         public static Detalhe of(Pedido p) {
-            return new Detalhe(p.getId(), p.getNumero(), p.getClienteNome(), p.getLocal(), p.getObservacao(),
+            return new Detalhe(p.getId(), p.getNumero(), p.getClienteNome(), p.getLocal(), p.getBloco(),
+                    p.getApartamento(), p.getObservacao(),
                     p.getStatusPreparo(), p.getStatusFinanceiro(), p.getTotal(),
                     p.getItens().stream().map(ItemResponse::of).toList(), p.isEstoqueReservado(),
                     p.getMotivoCancelamento(), p.getVendaId(), p.getCriadoEm(), p.getAceitoEm(), p.getProntoEm(),

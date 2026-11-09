@@ -15,7 +15,6 @@ import '../features/despesas/despesas_page.dart';
 import '../features/em_breve/em_breve_page.dart';
 import '../features/estoque/estoque_page.dart';
 import '../features/estoque/inventario_page.dart';
-import '../features/configuracoes/qr_codes_page.dart';
 import '../features/fornecedores/fornecedores_page.dart';
 import '../features/pedidos/pedidos_page.dart';
 import '../features/produtos/produto_form_page.dart';
@@ -58,14 +57,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       // PDV em tela cheia, fora do menu lateral do painel
       GoRoute(path: '/pdv', builder: (_, _) => const PdvPage()),
-      // QR Codes das mesas em tela cheia, para imprimir
-      GoRoute(
-        path: '/qrcodes',
-        builder: (_, state) => QrCodesPage(
-          mesas: int.tryParse(state.uri.queryParameters['mesas'] ?? '') ?? 10,
-          extras: state.uri.queryParameters['extras'],
-        ),
-      ),
       ShellRoute(
         builder: (context, state, child) => AdminShell(child: child),
         routes: [

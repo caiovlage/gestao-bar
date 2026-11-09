@@ -77,7 +77,7 @@ class _PedidosPageState extends ConsumerState<PedidosPage> {
       children: [
         CabecalhoPagina(
           titulo: 'Pedidos',
-          subtitulo: 'Pedidos feitos pelos clientes no cardápio digital (QR Code). Atualiza sozinho a cada 10 s.',
+          subtitulo: 'Pedidos do cardápio digital para entrega nos apartamentos. Atualiza sozinho a cada 10 s.',
           acoes: [
             SegmentedButton<bool>(
               segments: const [
@@ -136,7 +136,7 @@ final _colunas = <_Coluna>[
       (p) => p.status == StatusPreparo.recebido),
   _Coluna('Em preparo', Icons.soup_kitchen_outlined, StatusPreparo.emPreparo.cor,
       (p) => p.status == StatusPreparo.aceito || p.status == StatusPreparo.emPreparo),
-  _Coluna('Prontos', Icons.room_service_outlined, StatusPreparo.pronto.cor, (p) => p.status == StatusPreparo.pronto),
+  _Coluna('Prontos para entrega', Icons.delivery_dining_outlined, StatusPreparo.pronto.cor, (p) => p.status == StatusPreparo.pronto),
   _Coluna('Entregues · aguardando pagamento', Icons.payments_outlined, StatusPreparo.entregue.cor,
       (p) => p.status == StatusPreparo.entregue),
 ];
@@ -156,7 +156,7 @@ class _Kanban extends StatelessWidget {
           icone: Icons.receipt_long_outlined,
           titulo: 'Nenhum pedido em andamento',
           descricao: 'Os pedidos feitos pelo cardápio digital aparecem aqui automaticamente.\n'
-              'Gere os QR Codes das mesas em Configurações.',
+              'Envie o link do cardápio pelo WhatsApp (Configurações).',
         ),
       );
     }
@@ -345,14 +345,19 @@ class _CartaoPedidoState extends ConsumerState<_CartaoPedido> {
                 Text(_tempo(p.criadoEm), style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
               ]),
               const SizedBox(height: 4),
+              // Endereço de entrega em destaque
               Row(children: [
-                const Icon(Icons.place_outlined, size: 16),
-                const SizedBox(width: 4),
+                const Icon(Icons.apartment, size: 18, color: AppCores.ambarEscuro),
+                const SizedBox(width: 6),
                 Expanded(
-                  child: Text('${p.local} · ${p.clienteNome}',
-                      style: const TextStyle(fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                  child: Text(p.local,
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15), overflow: TextOverflow.ellipsis),
                 ),
               ]),
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: Text(p.clienteNome, style: TextStyle(color: Colors.grey.shade700), overflow: TextOverflow.ellipsis),
+              ),
               const Divider(height: 16),
               for (final i in p.itens)
                 Padding(

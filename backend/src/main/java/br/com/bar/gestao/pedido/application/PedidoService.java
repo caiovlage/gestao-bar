@@ -75,7 +75,7 @@ public class PedidoService {
         Map<UUID, CardapioService.ItemDisponivel> disponiveis = cardapio.disponiveis(
                 req.itens().stream().map(PedidoDto.ItemRequest::produtoId).distinct().toList());
         Pedido pedido = new Pedido(repository.proximoNumero(), req.chaveIdempotencia(), req.clienteNome().trim(),
-                req.local().trim(), texto(req.observacao()), ipOrigem);
+                req.bloco().trim(), req.apartamento().trim(), texto(req.observacao()), ipOrigem);
         for (PedidoDto.ItemRequest item : req.itens()) {
             CardapioService.ItemDisponivel p = disponiveis.get(item.produtoId());
             if (p == null) {
@@ -88,7 +88,7 @@ public class PedidoService {
             pedido.adicionarItem(p.id(), p.nome(), item.quantidade(), p.preco(), texto(item.observacao()));
         }
         repository.save(pedido);
-        log.info("Pedido nº {} recebido do cardápio: local={} total={} itens={}", pedido.getNumero(),
+        log.info("Pedido nº {} recebido do cardápio: entrega={} total={} itens={}", pedido.getNumero(),
                 pedido.getLocal(), pedido.getTotal(), pedido.getItens().size());
         return PedidoDto.Acompanhamento.of(pedido);
     }

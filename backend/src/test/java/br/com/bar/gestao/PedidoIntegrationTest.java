@@ -40,7 +40,7 @@ class PedidoIntegrationTest extends IntegracaoBase {
 
     private static String pedido(String chave, String itens) {
         return """
-                {"chaveIdempotencia":"%s","clienteNome":"Ana","local":"Mesa 4","itens":[%s]}""".formatted(chave, itens);
+                {"chaveIdempotencia":"%s","clienteNome":"Ana","bloco":"B","apartamento":"101","itens":[%s]}""".formatted(chave, itens);
     }
 
     private static String item(String produtoId, int quantidade) {
@@ -91,7 +91,10 @@ class PedidoIntegrationTest extends IntegracaoBase {
                 .andExpect(jsonPath("$.statusPreparo").value("RECEBIDO"))
                 .andExpect(jsonPath("$.statusFinanceiro").value("PENDENTE"))
                 .andExpect(jsonPath("$.total").value(54.0))
-                .andExpect(jsonPath("$.itens[0].observacao").value("sem gelo")));
+                .andExpect(jsonPath("$.itens[0].observacao").value("sem gelo"))
+                .andExpect(jsonPath("$.bloco").value("B"))
+                .andExpect(jsonPath("$.apartamento").value("101"))
+                .andExpect(jsonPath("$.local").value("Bloco B · Apto 101")));
         String id = JsonPath.read(criado, "$.id");
         long numero = ((Number) JsonPath.read(criado, "$.numero")).longValue();
         enviar(json, "10.0.0.1").andExpect(jsonPath("$.numero").value(numero));

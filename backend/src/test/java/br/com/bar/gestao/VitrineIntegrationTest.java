@@ -94,7 +94,7 @@ class VitrineIntegrationTest extends IntegracaoBase {
         // Pedido pelo cardápio usa o preço promocional
         mvc.perform(post("/api/public/pedidos").header("X-Real-IP", "10.7.7.7").contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"chaveIdempotencia":"%s","clienteNome":"Bia","local":"Mesa 2",
+                                {"chaveIdempotencia":"%s","clienteNome":"Bia","bloco":"A","apartamento":"12",
                                  "itens":[{"produtoId":"%s","quantidade":2}]}""".formatted(UUID.randomUUID(), promo)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.total").value(48.0));

@@ -6,7 +6,7 @@ import '../../app/providers.dart';
 import '../relatorios/relatorios.dart';
 import '../unidades/unidades.dart';
 import 'backup_card.dart';
-import 'qr_codes_page.dart';
+import 'cardapio_digital_card.dart';
 import 'vitrine_card.dart';
 
 final _configuracoesProvider = FutureProvider.autoDispose<Map<String, String>>((ref) async {
@@ -111,7 +111,7 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Cardápio aberto para pedidos'),
-            subtitle: const Text('Desative para impedir novos pedidos pelo QR Code'),
+            subtitle: const Text('Desative para pausar os pedidos pelo cardápio (ex.: sem entregadores)'),
             value: _cardapioAberto,
             onChanged: (v) => setState(() => _cardapioAberto = v),
           ),

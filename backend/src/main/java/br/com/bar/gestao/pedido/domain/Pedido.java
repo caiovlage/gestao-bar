@@ -41,8 +41,15 @@ public class Pedido extends BaseEntity {
     @Column(name = "cliente_nome", nullable = false, length = 80)
     private String clienteNome;
 
+    /** Texto do endereço de entrega para exibição (ex.: "Bloco B · Apto 101"). */
     @Column(nullable = false, length = 80)
     private String local;
+
+    @Column(length = 20)
+    private String bloco;
+
+    @Column(length = 20)
+    private String apartamento;
 
     @Column(length = 500)
     private String observacao;
@@ -92,12 +99,14 @@ public class Pedido extends BaseEntity {
     protected Pedido() {
     }
 
-    public Pedido(long numero, UUID chaveIdempotencia, String clienteNome, String local, String observacao,
-                  String ipOrigem) {
+    public Pedido(long numero, UUID chaveIdempotencia, String clienteNome, String bloco, String apartamento,
+                  String observacao, String ipOrigem) {
         this.numero = numero;
         this.chaveIdempotencia = chaveIdempotencia;
         this.clienteNome = clienteNome;
-        this.local = local;
+        this.bloco = bloco;
+        this.apartamento = apartamento;
+        this.local = "Bloco " + bloco + " · Apto " + apartamento;
         this.observacao = observacao;
         this.ipOrigem = ipOrigem;
     }
@@ -204,6 +213,14 @@ public class Pedido extends BaseEntity {
 
     public String getLocal() {
         return local;
+    }
+
+    public String getBloco() {
+        return bloco;
+    }
+
+    public String getApartamento() {
+        return apartamento;
     }
 
     public String getObservacao() {

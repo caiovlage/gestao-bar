@@ -130,9 +130,9 @@ enum EtapaPedido {
   recebido('RECEBIDO', 'Pedido enviado', 'Aguardando o bar confirmar'),
   aceito('ACEITO', 'Pedido confirmado', 'Já vamos começar a preparar'),
   emPreparo('EM_PREPARO', 'Em preparo', 'Seu pedido está sendo preparado'),
-  pronto('PRONTO', 'Pronto!', 'Já vai sair para você'),
+  pronto('PRONTO', 'Pronto!', 'Saindo para entrega no seu apartamento'),
   entregue('ENTREGUE', 'Entregue', 'Bom apetite!'),
-  cancelado('CANCELADO', 'Pedido cancelado', 'Fale com um atendente se tiver dúvidas');
+  cancelado('CANCELADO', 'Pedido cancelado', 'Fale com a gente pelo WhatsApp se tiver dúvidas');
 
   const EtapaPedido(this.api, this.titulo, this.descricao);
   final String api;
@@ -262,11 +262,13 @@ Future<Cardapio> buscarCardapio() async =>
 Future<Acompanhamento> buscarPedido(String id) async =>
     Acompanhamento.fromJson(await api.get('/api/public/pedidos/$id') as Map<String, dynamic>);
 
-Future<Acompanhamento> enviarPedido(Carrinho c, {required String nome, required String local, String? observacao}) async {
+Future<Acompanhamento> enviarPedido(Carrinho c,
+    {required String nome, required String bloco, required String apartamento, String? observacao}) async {
   final corpo = {
     'chaveIdempotencia': c.chave,
     'clienteNome': nome,
-    'local': local,
+    'bloco': bloco,
+    'apartamento': apartamento,
     if (observacao != null && observacao.trim().isNotEmpty) 'observacao': observacao.trim(),
     'itens': [
       for (final i in c.itens)
@@ -280,19 +282,26 @@ Future<Acompanhamento> enviarPedido(Carrinho c, {required String nome, required 
 abstract final class Memoria {
   static final _prefs = SharedPreferencesAsync();
 
-  static Future<String?> nome() async {
+  /// Nome, bloco e apartamento do último pedido feito neste celular.
+  static Future<({String? nome, String? bloco, String? apartamento})> cliente() async {
     try {
-      return await _prefs.getString('cardapio.nome');
+      return (
+        nome: await _prefs.getString('cardapio.nome'),
+        bloco: await _prefs.getString('cardapio.bloco'),
+        apartamento: await _prefs.getString('cardapio.apartamento'),
+      );
     } catch (_) {
-      return null;
+      return (nome: null, bloco: null, apartamento: null);
     }
   }
 
-  static Future<void> salvarNome(String nome) async {
+  static Future<void> salvarCliente({required String nome, required String bloco, required String apartamento}) async {
     try {
       await _prefs.setString('cardapio.nome', nome);
+      await _prefs.setString('cardapio.bloco', bloco);
+      await _prefs.setString('cardapio.apartamento', apartamento);
     } catch (e) {
-      debugPrint('Não foi possível salvar o nome: $e');
+      debugPrint('Não foi possível salvar os dados do cliente: $e');
     }
   }
 
@@ -312,13 +321,4 @@ abstract final class Memoria {
       debugPrint('Não foi possível lembrar o pedido: $e');
     }
   }
-}
-
-/// Local vindo do QR Code: ?mesa=12 → "Mesa 12"; ?local=Balcão → "Balcão".
-String? localDoQrCode() {
-  final q = Uri.base.queryParameters;
-  final mesa = q['mesa']?.trim();
-  if (mesa != null && mesa.isNotEmpty) return 'Mesa $mesa';
-  final local = q['local']?.trim();
-  return local == null || local.isEmpty ? null : local;
 }
