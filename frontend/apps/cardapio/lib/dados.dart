@@ -178,8 +178,9 @@ class Acompanhamento {
   final DateTime? criadoEm;
   final String? motivoCancelamento;
 
-  /// Nada mais vai mudar: não precisa continuar consultando.
-  bool get finalizado => etapa == EtapaPedido.cancelado || (etapa == EtapaPedido.entregue && pago);
+  /// Entregue ou cancelado: sai do aviso "Acompanhar pedido" do cardápio e para de consultar.
+  /// (O pagamento na entrega é registrado pelo bar e não muda nada para o cliente.)
+  bool get finalizado => etapa == EtapaPedido.cancelado || etapa == EtapaPedido.entregue;
 
   factory Acompanhamento.fromJson(Map<String, dynamic> j) => Acompanhamento(
         id: j['id'] as String,
