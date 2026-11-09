@@ -79,7 +79,7 @@ Registro das decisões tomadas durante a implementação (validar com o respons�
 
 | # | Decisão | Motivo |
 |---|---|---|
-| 44 | ~~**Dados de demonstração** ligáveis em Configurações (padrão: ligado), com faixa de aviso nas telas | Pedido do responsável, para apresentações; desligado, tudo vem dos dados reais. *(removido — ver 67)* |
+| 44 | **Dados de demonstração** ligáveis em Configurações (padrão: ligado), com faixa de aviso nas telas | Pedido do responsável, para apresentações; desligado, tudo vem dos dados reais. *(removido — ver 67)* |
 | 45 | Simulação **determinística** (o mesmo dia gera sempre os mesmos números) e **consistente** (séries, rankings e totais vêm das mesmas vendas simuladas) | Números estáveis e coerentes na apresentação. *(removido — ver 67)* |
 | 46 | Um único endpoint (`/relatorios/painel`) serve dashboard e relatórios: indicadores, séries por dia e hora, formas de pagamento, categorias, mais vendidos/lucrativos, baixo giro e estoque | Simplicidade; cada tela usa o que precisa. |
 | 47 | Faturamento só com **vendas concluídas**; **lucro bruto** = vendas − custo dos produtos; **lucro líquido** = lucro bruto − despesas do período, com aviso de que só é completo com todas as despesas lançadas | Diferenciar margem bruta de lucro líquido (requisito). |
