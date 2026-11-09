@@ -31,6 +31,7 @@ docs/               instalação, arquitetura e decisões
 | 5. Compras — sugestões, listas (PDF/Excel), recebimento e custo médio | ✅ concluída |
 | 6. Pedidos web — cardápio por QR Code, pedido pelo celular, kanban, pagamento gerando venda | ✅ concluída |
 | 7. BI — dashboard, relatórios e despesas (dados reais) | ✅ concluída |
+| Comandas — contas abertas vinculadas ao caixa, fechadas como venda | ✅ concluída |
 
 ## Instalar ou atualizar no servidor (Oracle Linux)
 

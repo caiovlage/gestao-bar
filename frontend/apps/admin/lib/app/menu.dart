@@ -16,6 +16,7 @@ class ItemMenu {
 const itensMenu = <ItemMenu>[
   ItemMenu('Dashboard', Icons.dashboard_outlined, '/dashboard'),
   ItemMenu('Vendas', Icons.point_of_sale_outlined, '/vendas'),
+  ItemMenu('Comandas', Icons.receipt_outlined, '/comandas'),
   ItemMenu('Pedidos', Icons.receipt_long_outlined, '/pedidos'),
   ItemMenu('Produtos', Icons.inventory_2_outlined, '/produtos'),
   ItemMenu('Categorias', Icons.category_outlined, '/categorias'),

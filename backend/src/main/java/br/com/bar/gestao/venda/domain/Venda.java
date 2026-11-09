@@ -38,6 +38,10 @@ public class Venda extends BaseEntity {
     @Column(name = "pedido_id", unique = true)
     private UUID pedidoId;
 
+    /** Comanda (conta aberta) que originou a venda (no máximo uma venda por comanda). */
+    @Column(name = "comanda_id", unique = true)
+    private UUID comandaId;
+
     @Column(name = "data_hora", nullable = false)
     private Instant dataHora;
 
@@ -107,6 +111,14 @@ public class Venda extends BaseEntity {
 
     public UUID getPedidoId() {
         return pedidoId;
+    }
+
+    public void vincularComanda(UUID comandaId) {
+        this.comandaId = comandaId;
+    }
+
+    public UUID getComandaId() {
+        return comandaId;
     }
 
     public void definirValores(BigDecimal subtotal, BigDecimal desconto, BigDecimal custoTotal,

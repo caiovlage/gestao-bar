@@ -49,7 +49,7 @@ public class VendaService {
 
     @Transactional
     public VendaDto.Detalhe registrar(VendaDto.RegistrarRequest req) {
-        return registrar(req, null, Map.of());
+        return registrar(req, java.util.Collections.nCopies(req.itens().size(), null), null, null);
     }
 
     /**
@@ -58,10 +58,22 @@ public class VendaService {
      */
     @Transactional
     public VendaDto.Detalhe registrarDoPedido(UUID pedidoId, VendaDto.RegistrarRequest req, Map<UUID, BigDecimal> precos) {
-        return registrar(req, pedidoId, precos);
+        return registrar(req, req.itens().stream().map(i -> precos.get(i.produtoId())).toList(), pedidoId, null);
     }
 
-    private VendaDto.Detalhe registrar(VendaDto.RegistrarRequest req, UUID pedidoId, Map<UUID, BigDecimal> precosPedido) {
+    /**
+     * Venda do fechamento de uma comanda: {@code precos} traz o preço de cada item (na mesma ordem de
+     * {@code req.itens()}), congelado quando o item foi lançado. A restrição única em venda.comanda_id
+     * impede duas vendas para a mesma comanda.
+     */
+    @Transactional
+    public VendaDto.Detalhe registrarDaComanda(UUID comandaId, VendaDto.RegistrarRequest req, List<BigDecimal> precos) {
+        return registrar(req, precos, null, comandaId);
+    }
+
+    /** {@code precosFixos}: preço de cada item (mesma ordem de req.itens()); nulo = preço atual do cadastro. */
+    private VendaDto.Detalhe registrar(VendaDto.RegistrarRequest req, List<BigDecimal> precosFixos, UUID pedidoId,
+                                       UUID comandaId) {
         // Reenvio da mesma venda (duplo clique, rede instável): devolve a já registrada.
         Optional<Venda> existente = repository.findByChaveIdempotencia(req.chaveIdempotencia());
         if (existente.isPresent()) {
@@ -76,18 +88,20 @@ public class VendaService {
         Venda venda = new Venda(repository.proximoNumero(), req.chaveIdempotencia(), caixaId, req.formaPagamento(),
                 texto(req.observacao()));
         venda.vincularPedido(pedidoId);
+        venda.vincularComanda(comandaId);
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal custoTotal = BigDecimal.ZERO;
         List<EstoqueService.Movimento> baixas = new ArrayList<>();
 
-        for (VendaDto.ItemRequest item : req.itens()) {
+        for (int indice = 0; indice < req.itens().size(); indice++) {
+            VendaDto.ItemRequest item = req.itens().get(indice);
             ProdutoResumo p = resumos.get(item.produtoId());
             if (p == null) {
                 throw new NegocioException("PRODUTO_INVALIDO", "Produto não encontrado.");
             }
-            BigDecimal preco = precosPedido.get(p.id());
+            BigDecimal preco = precosFixos.get(indice);
             if (preco == null) {
-                // Venda direta do PDV: produto precisa estar à venda agora. Pedido aceito já foi prometido ao cliente.
+                // Venda direta do PDV: produto precisa estar à venda agora. Pedido/comanda já foram prometidos ao cliente.
                 if (!p.ativo() || !p.vendavel()) {
                     throw new NegocioException("PRODUTO_INDISPONIVEL", p.nome() + " não está disponível para venda.");
                 }

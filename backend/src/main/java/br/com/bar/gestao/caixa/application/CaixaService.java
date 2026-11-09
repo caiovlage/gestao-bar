@@ -91,6 +91,14 @@ public class CaixaService {
     @Transactional
     public CaixaDto.Response fechar(CaixaDto.FecharRequest req) {
         Caixa caixa = caixaAbertoExclusivo();
+        // Comandas (contas abertas) pertencem ao caixa: precisam ser fechadas ou canceladas antes.
+        // Consulta direta, sem depender do módulo de comandas (que depende do caixa).
+        long comandasAbertas = jdbc.sql("SELECT count(*) FROM comanda WHERE caixa_id = :caixa AND status = 'ABERTA'")
+                .param("caixa", caixa.getId()).query(Long.class).single();
+        if (comandasAbertas > 0) {
+            throw new NegocioException("COMANDAS_ABERTAS", "Há " + comandasAbertas + " comanda(s) aberta(s) neste caixa. "
+                    + "Feche ou cancele as comandas antes de fechar o caixa.");
+        }
         Caixa.Totais totais = totais(caixa);
         caixa.fechar(totais, req.saldoContado(), texto(req.observacao()));
         log.info("Caixa fechado: id={} vendas={} esperado={} contado={} diferença={}", caixa.getId(),
