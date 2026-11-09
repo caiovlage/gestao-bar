@@ -41,22 +41,33 @@ public class CompraConsultaService {
                             SELECT pe.descricao, pe.fator FROM produto_embalagem pe
                             WHERE pe.produto_id = p.id ORDER BY pe.fator DESC LIMIT 1
                         ) emb ON TRUE
-                        WHERE p.ativo AND p.controla_estoque AND p.estoque_minimo > 0
-                          AND e.quantidade < p.estoque_minimo
+                        WHERE p.ativo AND p.controla_estoque
+                          AND (e.quantidade <= 0 OR (p.estoque_minimo > 0 AND e.quantidade < p.estoque_minimo))
                         ORDER BY coalesce(f.nome_fantasia, f.nome, '~'), lower(p.nome)
                         """)
                 .query((rs, n) -> {
                     BigDecimal atual = rs.getBigDecimal("quantidade");
                     BigDecimal minimo = rs.getBigDecimal("estoque_minimo");
-                    BigDecimal sugerido = minimo.subtract(atual);
                     BigDecimal fator = rs.getBigDecimal("fator");
+                    BigDecimal sugerido = quantidadeSugerida(atual, minimo, fator);
                     BigDecimal emEmbalagens = fator == null ? null : sugerido.divide(fator, 0, RoundingMode.CEILING);
                     return new CompraDto.Sugestao(rs.getObject("id", UUID.class), rs.getString("nome"),
                             rs.getString("categoria"), rs.getString("sigla"), atual, minimo, sugerido,
                             rs.getBigDecimal("custo_medio"), rs.getObject("fornecedor_id", UUID.class),
-                            rs.getString("fornecedor"), rs.getString("embalagem"), emEmbalagens);
+                            rs.getString("fornecedor"), rs.getString("embalagem"), emEmbalagens,
+                            atual.signum() <= 0 ? "ZERADO" : "ABAIXO_MINIMO");
                 })
                 .list();
+    }
+
+    /**
+     * Quanto comprar (na unidade de estoque): o que falta para o mínimo; produto zerado sem mínimo
+     * definido recebe 1 embalagem (a maior cadastrada) ou 1 unidade.
+     */
+    public static BigDecimal quantidadeSugerida(BigDecimal atual, BigDecimal minimo, BigDecimal fatorEmbalagem) {
+        BigDecimal falta = (minimo.signum() > 0 ? minimo : BigDecimal.ZERO).subtract(atual);
+        if (falta.signum() > 0) return falta;
+        return fatorEmbalagem != null ? fatorEmbalagem : BigDecimal.ONE;
     }
 
     /** Produtos que podem ser comprados (ativos, com controle de estoque), com suas embalagens. */

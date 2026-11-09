@@ -52,7 +52,9 @@ public final class CompraDto {
             UUID fornecedorId,
             String fornecedor,
             String embalagem,
-            BigDecimal sugeridoEmbalagens) {
+            BigDecimal sugeridoEmbalagens,
+            /** ZERADO (saldo ≤ 0) ou ABAIXO_MINIMO. */
+            String situacao) {
     }
 
     public record ItemResponse(

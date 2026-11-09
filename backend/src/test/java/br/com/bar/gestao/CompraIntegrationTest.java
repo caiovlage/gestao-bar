@@ -94,4 +94,31 @@ class CompraIntegrationTest extends IntegracaoBase {
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.codigo").value("PRODUTO_SEM_CONTROLE_ESTOQUE"));
     }
+
+    @Test
+    void produtoZeradoSemMinimoEntraNaListaAutomatica() throws Exception {
+        // Zerado e sem estoque mínimo: sugerido 1 caixa (a maior embalagem)
+        String refri = JsonPath.read(corpo(postJson("/api/admin/produtos", """
+                {"nome":"Refri zerado %s","tipo":"REVENDA","unidadeEstoqueId":"%s","custoMedio":2,"precoVenda":6,
+                 "estoqueMinimo":0,"embalagens":[{"unidadeId":"%s","descricao":"Fardo 6","fator":6}]}
+                """.formatted(UUID.randomUUID(), idUnidade("un"), idUnidade("cx"))).andExpect(status().isCreated())), "$.id");
+        // Com saldo e sem mínimo: não entra
+        String agua = JsonPath.read(corpo(postJson("/api/admin/produtos", """
+                {"nome":"Água com saldo %s","tipo":"REVENDA","unidadeEstoqueId":"%s","custoMedio":1,"precoVenda":4,
+                 "estoqueMinimo":0}""".formatted(UUID.randomUUID(), idUnidade("un"))).andExpect(status().isCreated())), "$.id");
+        postJson("/api/admin/estoque/entradas", "{\"produtoId\":\"%s\",\"quantidade\":10}".formatted(agua))
+                .andExpect(status().isCreated());
+
+        getAuth("/api/admin/compras/sugestoes")
+                .andExpect(jsonPath("$[?(@.produtoId == '%s')].situacao".formatted(refri)).value("ZERADO"))
+                .andExpect(jsonPath("$[?(@.produtoId == '%s')].sugerido".formatted(refri)).value(6.0))
+                .andExpect(jsonPath("$[?(@.produtoId == '%s')].sugeridoEmbalagens".formatted(refri)).value(1))
+                .andExpect(jsonPath("$[?(@.produtoId == '%s')]".formatted(agua)).isEmpty());
+
+        postJson("/api/admin/compras/da-sugestao", "{\"produtoIds\":[\"%s\",\"%s\"]}".formatted(refri, agua))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.itens.length()").value(1))
+                .andExpect(jsonPath("$.itens[0].unidadeCompra").value("Fardo 6"))
+                .andExpect(jsonPath("$.itens[0].quantidade").value(1));
+    }
 }

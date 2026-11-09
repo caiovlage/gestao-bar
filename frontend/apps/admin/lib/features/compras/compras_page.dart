@@ -17,6 +17,39 @@ class _ComprasPageState extends ConsumerState<ComprasPage> {
   bool _sugestoes = true;
 
   @override
+  bool _gerandoNova = false;
+
+  /// Monta a lista sozinha com todos os produtos cadastrados (ativos, com controle de estoque)
+  /// que estão zerados ou abaixo do mínimo. Sem nenhum, abre uma lista em branco.
+  Future<void> _novaListaAutomatica() async {
+    setState(() => _gerandoNova = true);
+    try {
+      final repo = ref.read(comprasRepositoryProvider);
+      final sugestoes = await repo.sugestoes();
+      if (!mounted) return;
+      if (sugestoes.isEmpty) {
+        mostrarSucesso(context, 'Nenhum produto zerado ou abaixo do mínimo. Adicione os itens manualmente.');
+        context.go('/compras/nova');
+        return;
+      }
+      final compra = await repo.criarDaSugestao([for (final s in sugestoes) s.produtoId], null);
+      ref.invalidate(comprasProvider);
+      ref.invalidate(sugestoesCompraProvider);
+      if (!mounted) return;
+      final zerados = sugestoes.where((s) => s.zerado).length;
+      mostrarSucesso(
+          context,
+          'Lista nº ${compra.numero} gerada com ${sugestoes.length} produto(s): $zerados zerado(s) e '
+          '${sugestoes.length - zerados} abaixo do mínimo. Ajuste as quantidades ou remova itens.');
+      context.go('/compras/${compra.id}');
+    } catch (e) {
+      if (mounted) mostrarErro(context, e);
+    } finally {
+      if (mounted) setState(() => _gerandoNova = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -25,9 +58,13 @@ class _ComprasPageState extends ConsumerState<ComprasPage> {
           titulo: 'Compras',
           subtitulo: 'Reposição de estoque: sugestões, listas de compras e recebimento',
           acoes: [
-            OutlinedButton.icon(
+            TextButton(
               onPressed: () => context.go('/compras/nova'),
-              icon: const Icon(Icons.add),
+              child: const Text('Lista em branco'),
+            ),
+            FilledButton.icon(
+              onPressed: _gerandoNova ? null : _novaListaAutomatica,
+              icon: const Icon(Icons.auto_awesome),
               label: const Text('Nova lista'),
             ),
           ],
@@ -91,8 +128,8 @@ class _SugestoesState extends ConsumerState<_Sugestoes> {
           return const Card(
             child: EstadoVazio(
               icone: Icons.check_circle_outline,
-              titulo: 'Nenhum produto abaixo do mínimo',
-              descricao: 'Defina o estoque mínimo nos produtos para receber sugestões de compra.',
+              titulo: 'Nenhum produto zerado ou abaixo do mínimo',
+              descricao: 'Aparecem aqui os produtos cadastrados com controle de estoque que estão zerados ou abaixo do estoque mínimo.',
             ),
           );
         }
@@ -127,9 +164,16 @@ class _SugestoesState extends ConsumerState<_Sugestoes> {
                 CheckboxListTile(
                   value: selecionados.contains(s.produtoId),
                   onChanged: (v) => setState(() => v == true ? selecionados.add(s.produtoId) : selecionados.remove(s.produtoId)),
-                  title: Text(s.nome, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  title: Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Text(s.nome, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    s.zerado
+                        ? const Etiqueta('Zerado', cor: AppCores.perigo)
+                        : const Etiqueta('Abaixo do mínimo', cor: AppCores.alerta),
+                  ]),
                   subtitle: Text([
-                    'estoque ${formatarQuantidade(s.estoqueAtual)} de ${formatarQuantidade(s.estoqueMinimo)} ${s.unidadeSigla}',
+                    s.estoqueMinimo > 0
+                        ? 'estoque ${formatarQuantidade(s.estoqueAtual)} de ${formatarQuantidade(s.estoqueMinimo)} ${s.unidadeSigla}'
+                        : 'estoque ${formatarQuantidade(s.estoqueAtual)} ${s.unidadeSigla} · sem mínimo definido',
                     if (s.fornecedor != null) s.fornecedor!,
                   ].join(' · ')),
                   secondary: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [

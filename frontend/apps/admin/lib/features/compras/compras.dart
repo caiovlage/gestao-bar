@@ -29,6 +29,7 @@ class SugestaoCompra {
     this.fornecedor,
     this.embalagem,
     this.sugeridoEmbalagens,
+    this.zerado = false,
   });
 
   final String produtoId;
@@ -43,6 +44,9 @@ class SugestaoCompra {
   final String? embalagem;
   final num? sugeridoEmbalagens;
 
+  /// true = estoque zerado; false = abaixo do mínimo.
+  final bool zerado;
+
   factory SugestaoCompra.fromJson(Map<String, dynamic> j) => SugestaoCompra(
         produtoId: j['produtoId'] as String,
         nome: j['nome'] as String,
@@ -55,6 +59,7 @@ class SugestaoCompra {
         fornecedor: j['fornecedor'] as String?,
         embalagem: j['embalagem'] as String?,
         sugeridoEmbalagens: numDoJson(j['sugeridoEmbalagens']),
+        zerado: j['situacao'] == 'ZERADO',
       );
 }
 

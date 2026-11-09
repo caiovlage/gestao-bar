@@ -82,9 +82,13 @@ public class CompraService {
         for (UUID id : req.produtoIds()) {
             ProdutoResumo p = resumos.get(id);
             if (p == null || !p.controlaEstoque()) continue;
-            BigDecimal falta = produtos.estoqueMinimo(id).subtract(saldos.getOrDefault(id, BigDecimal.ZERO));
-            if (falta.signum() <= 0) continue;
+            BigDecimal saldo = saldos.getOrDefault(id, BigDecimal.ZERO);
+            BigDecimal minimo = produtos.estoqueMinimo(id);
+            // Só entram produtos zerados ou abaixo do mínimo
+            if (saldo.signum() > 0 && (minimo.signum() <= 0 || saldo.compareTo(minimo) >= 0)) continue;
             var embalagem = produtos.maiorEmbalagem(id);
+            BigDecimal falta = CompraConsultaService.quantidadeSugerida(saldo, minimo,
+                    embalagem.map(e -> e.fator()).orElse(null));
             if (embalagem.isPresent()) {
                 BigDecimal caixas = falta.divide(embalagem.get().fator(), 0, RoundingMode.CEILING);
                 itens.add(new CompraDto.ItemRequest(id, caixas, null, embalagem.get().id(),
@@ -94,7 +98,7 @@ public class CompraService {
             }
         }
         if (itens.isEmpty()) {
-            throw new NegocioException("SEM_SUGESTOES", "Nenhum dos produtos selecionados está abaixo do mínimo.");
+            throw new NegocioException("SEM_SUGESTOES", "Nenhum dos produtos selecionados está zerado ou abaixo do mínimo.");
         }
         return criar(new CompraDto.Request(req.fornecedorId(), null, itens));
     }
