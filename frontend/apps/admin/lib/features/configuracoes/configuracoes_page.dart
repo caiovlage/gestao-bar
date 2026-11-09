@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../relatorios/relatorios.dart';
 import '../unidades/unidades.dart';
+import 'backup_card.dart';
 import 'qr_codes_page.dart';
 import 'vitrine_card.dart';
 
@@ -37,6 +38,8 @@ class ConfiguracoesPage extends ConsumerWidget {
         const CardapioDigitalCard(),
         const SizedBox(height: 16),
         const VitrineCard(),
+        const SizedBox(height: 16),
+        const BackupCard(),
         const SizedBox(height: 16),
         const _UnidadesCard(),
       ],

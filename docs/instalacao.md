@@ -205,7 +205,33 @@ docker run --rm -v gestao-bar_uploads:/dados -v ~/backups:/backup alpine \
 
 Guarde também uma cópia do `~/gestao-bar/.env` em local seguro: sem ele, não é possível acessar o banco.
 
+### Backup diário no Git (repositório privado)
+
+O servidor pode enviar uma cópia do banco por dia para um repositório Git **privado**, ligado e
+desligado pelo painel em **Configurações → Backup diário no Git**.
+
+1. No GitHub, crie um repositório **privado** vazio (ex.: `gestao-bar-backups`).
+2. Rode `./deploy.sh` no servidor: ele cria a chave SSH do backup (`.backup-git/id_ed25519`, fora do
+   Git) e agenda a verificação a cada 5 minutos (`gestao-bar-backup.timer`).
+3. Em **Configurações → Backup diário no Git**, copie a chave do servidor. No GitHub: repositório →
+   **Settings → Deploy keys → Add deploy key**, cole a chave e marque **Allow write access**.
+4. No painel, informe o endereço SSH (ex.: `git@github.com:usuario/gestao-bar-backups.git`), o
+   horário e quantos backups manter, ligue **Enviar backup diário** e salve.
+5. Clique em **Fazer backup agora** para testar: em até 5 minutos o resultado aparece no painel.
+
+O repositório guarda só os últimos backups (`gestao-bar-AAAA-MM-DD.sql.gz`) em um único commit, para
+não crescer sem limite. A chave só tem acesso a esse repositório. Para acompanhar no servidor:
+
+```bash
+systemctl list-timers gestao-bar-backup.timer
+journalctl -u gestao-bar-backup.service -n 20 --no-pager
+infra/backup/backup-git.sh --agora      # envia na hora (ignora o horário)
+```
+
 ### Restaurar um backup
+
+Para usar um backup do Git, baixe o arquivo `gestao-bar-AAAA-MM-DD.sql.gz` do repositório privado
+(GitHub → arquivo → *Download raw file*) para `~/backups/` e siga os comandos abaixo.
 
 ```bash
 cd ~/gestao-bar

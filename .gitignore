@@ -8,3 +8,5 @@ frontend/**/.flutter-plugins*
 *.iml
 .idea/
 .vscode/
+# chave SSH e cópia local dos backups (nunca versionar)
+.backup-git/

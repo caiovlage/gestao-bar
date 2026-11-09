@@ -325,6 +325,48 @@ main() {
     ok "Backend no ar"
   fi
 
+  # ================================================================== 7b. backup diário no Git
+  passo "Backup diário no Git (agendamento)"
+  # A chave fica só no servidor (.backup-git/ está no .gitignore). Ligar, desligar e escolher o
+  # repositório é feito no painel: Configurações → Backup diário no Git.
+  local BKP="$RAIZ/.backup-git"
+  mkdir -p "$BKP"
+  chmod 700 "$BKP"
+  if [[ ! -f "$BKP/id_ed25519" ]]; then
+    ssh-keygen -q -t ed25519 -N "" -C "gestao-bar-backup@$(hostname -s)" -f "$BKP/id_ed25519"
+    ok "Chave SSH do backup criada"
+  fi
+  chmod +x infra/backup/backup-git.sh
+  sudo tee /etc/systemd/system/gestao-bar-backup.service >/dev/null <<UNIDADE
+[Unit]
+Description=Gestão do Bar - backup diário do banco no Git (se ligado no painel)
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+User=$USER
+WorkingDirectory=$RAIZ
+ExecStart=$RAIZ/infra/backup/backup-git.sh
+UNIDADE
+  sudo tee /etc/systemd/system/gestao-bar-backup.timer >/dev/null <<UNIDADE
+[Unit]
+Description=Verifica a cada 5 minutos se é hora do backup no Git
+
+[Timer]
+OnBootSec=3min
+OnCalendar=*:0/5
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
+UNIDADE
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now -q gestao-bar-backup.timer
+  ok "Verificação de backup agendada (a cada 5 min; o envio segue as Configurações do painel)"
+  info "Chave pública para cadastrar no repositório privado (Deploy keys, com escrita):"
+  info "$(cat "$BKP/id_ed25519.pub")"
+
   # ================================================================== 8. verificação
   passo "Verificação pela porta 80"
   local falhas=0
