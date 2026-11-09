@@ -219,6 +219,26 @@ main() {
     aviso "pois pode ter server_name/HTTPS). Compare: sudo diff infra/nginx/gestao-bar.conf $NGINX_CONF"
   fi
 
+  # Tipo correto para arquivos .wasm (motor gráfico do Flutter); instalações antigas não têm.
+  if [[ -f "$NGINX_CONF" ]] && ! sudo grep -q 'application/wasm' "$NGINX_CONF"; then
+    info "Configurando o nginx para servir arquivos .wasm (WebAssembly) com o tipo correto"
+    sudo cp "$NGINX_CONF" "$NGINX_CONF.antes-wasm"
+    if sudo grep -q 'location = / ' "$NGINX_CONF"; then
+      sudo awk -v trecho="$(cat infra/nginx/wasm.location)" \
+          '!feito && /location = \/ /{print trecho; feito=1} {print}' "$NGINX_CONF.antes-wasm" \
+          | sudo tee "$NGINX_CONF" >/dev/null
+      if sudo nginx -t -q 2>/dev/null; then
+        ok "Tipo application/wasm configurado (cópia anterior: $NGINX_CONF.antes-wasm)"
+      else
+        sudo cp "$NGINX_CONF.antes-wasm" "$NGINX_CONF"
+        aviso "Não foi possível ajustar o nginx automaticamente; configuração anterior restaurada."
+        aviso "Copie manualmente o bloco de infra/nginx/wasm.location para $NGINX_CONF."
+      fi
+    else
+      aviso "Copie manualmente o bloco de infra/nginx/wasm.location para dentro do bloco server de $NGINX_CONF."
+    fi
+  fi
+
   if command -v selinuxenabled >/dev/null && selinuxenabled; then
     if ! getsebool httpd_can_network_connect | grep -q ' on$'; then
       info "SELinux: permitindo que o nginx acesse o backend"
@@ -299,8 +319,7 @@ main() {
     info "Compilando o painel (/admin/)"
     (cd frontend/apps/admin && flutter build web --release --base-href /admin/)
     info "Compilando o cardápio (/cardapio/)"
-    # --no-web-resources-cdn: o motor gráfico do Flutter sai do próprio servidor, sem depender do CDN do Google
-    (cd frontend/apps/cardapio && flutter build web --release --base-href /cardapio/ --no-web-resources-cdn)
+    (cd frontend/apps/cardapio && flutter build web --release --base-href /cardapio/)
     rsync -a --delete frontend/apps/admin/build/web/ "$WEB_DIR/"
     rsync -a --delete frontend/apps/cardapio/build/web/ "$CARDAPIO_DIR/"
     if command -v restorecon >/dev/null; then sudo restorecon -R /var/www/gestao-bar; fi

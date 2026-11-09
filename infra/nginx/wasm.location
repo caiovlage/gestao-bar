@@ -1,0 +1,9 @@
+    # ----------------------------------------------------------------- WebAssembly
+    # O mime.types do nginx do Oracle Linux não conhece .wasm; sem "application/wasm"
+    # o navegador recusa o motor gráfico do Flutter e o app não abre.
+    location ~* \.wasm$ {
+        types { }
+        default_type application/wasm;
+        add_header Cache-Control "no-cache";
+    }
+

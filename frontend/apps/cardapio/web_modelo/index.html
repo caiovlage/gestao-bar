@@ -55,6 +55,13 @@
     (function () {
       var el = document.getElementById('carregando');
       var msg = document.getElementById('carregando-msg');
+      function mostrarErro() {
+        if (!el || !el.parentNode) return;
+        etapas.forEach(clearTimeout);
+        document.getElementById('carregando-roda').style.display = 'none';
+        msg.style.display = 'none';
+        document.getElementById('carregando-erro').style.display = 'block';
+      }
       var etapas = [
         setTimeout(function () { msg.textContent = 'Quase lá… preparando o cardápio'; }, 4000),
         setTimeout(function () { msg.textContent = 'Sua conexão parece lenta. Ainda carregando…'; }, 10000),
@@ -73,6 +80,13 @@
         setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
       };
       window.addEventListener('flutter-first-frame', window.removerCarregando);
+      // Erro ao carregar o app (ex.: arquivo do motor gráfico recusado): avisa logo, com "Tentar novamente".
+      window.addEventListener('unhandledrejection', function (e) {
+        var motivo = String(e.reason && (e.reason.message || e.reason));
+        if (!/WebAssembly|wasm|canvaskit|main\.dart|Failed to fetch|NetworkError|Loading/i.test(motivo)) return;
+        console.error('Falha ao iniciar o cardápio:', e.reason);
+        mostrarErro();
+      });
     })();
   </script>
   <script src="flutter_bootstrap.js" async></script>
