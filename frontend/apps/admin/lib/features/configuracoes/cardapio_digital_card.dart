@@ -1,10 +1,14 @@
+import 'dart:ui' as ui;
+
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../app/providers.dart';
 import '../../app/widgets/abrir_link/abrir_link.dart';
+import '../../app/widgets/download/download.dart';
 
 /// Endereço público do cardápio (mesmo servidor do painel, caminho /cardapio/).
 String get urlCardapio => '$apiUrl/cardapio/';
@@ -13,9 +17,68 @@ String get urlCardapio => '$apiUrl/cardapio/';
 String mensagemWhatsApp() =>
     'Peça pelo nosso cardápio e receba no seu apartamento 🍻\n$urlCardapio';
 
+/// QR Code do cardápio com a taça do logo no centro. Usa correção de erros máxima (H, ~30%),
+/// então o logo cobrindo o meio não impede a leitura.
+class QrCodeCardapio extends StatelessWidget {
+  const QrCodeCardapio({super.key, required this.tamanho});
+
+  final double tamanho;
+
+  @override
+  Widget build(BuildContext context) {
+    final logo = tamanho * 0.22;
+    return SizedBox(
+      width: tamanho,
+      height: tamanho,
+      child: Stack(alignment: Alignment.center, children: [
+        QrImageView(
+          data: urlCardapio,
+          size: tamanho,
+          backgroundColor: Colors.white,
+          errorCorrectionLevel: QrErrorCorrectLevel.H,
+          gapless: true,
+        ),
+        // anel branco separa o logo dos módulos do QR
+        Container(
+          width: logo,
+          height: logo,
+          padding: EdgeInsets.all(logo * 0.08),
+          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          child: Container(
+            decoration: const BoxDecoration(color: AppCores.ambar, shape: BoxShape.circle),
+            child: Icon(Icons.local_bar, size: logo * 0.55, color: AppCores.sobreAmbar),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 /// Cartão em Configurações: link do cardápio para enviar pelo WhatsApp (e QR Code opcional).
-class CardapioDigitalCard extends StatelessWidget {
+class CardapioDigitalCard extends StatefulWidget {
   const CardapioDigitalCard({super.key});
+
+  @override
+  State<CardapioDigitalCard> createState() => _CardapioDigitalCardState();
+}
+
+class _CardapioDigitalCardState extends State<CardapioDigitalCard> {
+  final _qr = GlobalKey();
+
+  /// Salva o QR Code exibido como PNG em alta resolução (~1.300 px), para impressão.
+  Future<void> _baixarQr() async {
+    try {
+      final objeto = _qr.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (objeto == null) return;
+      final imagem = await objeto.toImage(pixelRatio: 8);
+      final png = await imagem.toByteData(format: ui.ImageByteFormat.png);
+      if (png == null) return;
+      final ok = await baixarArquivo(png.buffer.asUint8List(), 'qrcode-cardapio.png', 'image/png');
+      if (!ok && mounted) mostrarErro(context, 'Baixar imagem só está disponível no navegador.');
+    } catch (e) {
+      if (mounted) mostrarErro(context, e);
+    }
+  }
 
   Future<void> _compartilhar(BuildContext context) async {
     final texto = mensagemWhatsApp();
@@ -93,8 +156,14 @@ class CardapioDigitalCard extends StatelessWidget {
             ),
             // QR Code opcional (ex.: cartaz no elevador ou na portaria)
             Column(mainAxisSize: MainAxisSize.min, children: [
-              QrImageView(data: urlCardapio, size: 130, backgroundColor: Colors.white),
+              RepaintBoundary(key: _qr, child: const QrCodeCardapio(tamanho: 160)),
+              const SizedBox(height: 6),
               Text('QR Code para cartazes', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+              TextButton.icon(
+                onPressed: _baixarQr,
+                icon: const Icon(Icons.download),
+                label: const Text('Baixar QR Code (PNG)'),
+              ),
             ]),
           ],
         ),
