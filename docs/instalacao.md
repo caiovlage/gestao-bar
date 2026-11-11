@@ -12,7 +12,8 @@ Navegador / APK ──:80──►│ nginx (instalado no Linux)                
                         └────────────────────────────────────────────────────────────┘
 ```
 
-Tudo sai pela **porta 80**: o painel em `http://SERVIDOR/admin/` e a API em `http://SERVIDOR/api/`.
+Tudo sai pela **porta 80**: `http://SERVIDOR/` abre o **cardápio** do cliente (`/cardapio/`), o painel fica em
+`http://SERVIDOR/admin/` e a API em `http://SERVIDOR/api/`.
 O backend (8080) e o banco (5432) ficam acessíveis **somente dentro do servidor**.
 
 **Só a porta 80 precisa estar aberta.** O navegador baixa o painel pela porta 80 e o painel chama a
@@ -109,7 +110,7 @@ Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho
 
 ### Cardápio digital (pedidos para entrega)
 
-- Endereço para o cliente: `http://SERVIDOR/cardapio/` (o mesmo nginx, porta 80).
+- Endereço para o cliente: `http://SERVIDOR/` (redireciona para `/cardapio/`; o mesmo nginx, porta 80).
 - Em **Configurações → Cardápio digital**, use **Compartilhar no WhatsApp** (ou copie o link) para
   enviar aos moradores. O cliente abre no navegador do celular, escolhe os produtos e informa
   **nome, bloco e apartamento**; o celular lembra esses dados para o próximo pedido. Há também um

@@ -239,6 +239,19 @@ main() {
     fi
   fi
 
+  # Endereço principal (http://SERVIDOR/) passou a abrir o cardápio; instalações antigas iam ao painel.
+  if [[ -f "$NGINX_CONF" ]] && sudo grep -q 'location = / { return 302 /admin/; }' "$NGINX_CONF"; then
+    info "Endereço principal: redirecionando para o cardápio (/cardapio/)"
+    sudo cp "$NGINX_CONF" "$NGINX_CONF.antes-raiz-cardapio"
+    sudo sed -i 's#location = / { return 302 /admin/; }#location = / { return 302 /cardapio/; }#' "$NGINX_CONF"
+    if sudo nginx -t -q 2>/dev/null; then
+      ok "http://SERVIDOR/ agora abre o cardápio (painel em /admin/)"
+    else
+      sudo cp "$NGINX_CONF.antes-raiz-cardapio" "$NGINX_CONF"
+      aviso "Não foi possível ajustar o redirecionamento; configuração anterior restaurada."
+    fi
+  fi
+
   if command -v selinuxenabled >/dev/null && selinuxenabled; then
     if ! getsebool httpd_can_network_connect | grep -q ' on$'; then
       info "SELinux: permitindo que o nginx acesse o backend"
@@ -405,8 +418,8 @@ UNIDADE
 
   local IP; IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
   titulo "Concluído"
-  echo "   Acesse: http://${IP:-SERVIDOR}/   (painel em /admin/, API em /api/)"
-  echo "   Cardápio do cliente: http://${IP:-SERVIDOR}/cardapio/   (QR Codes das mesas em Configurações)"
+  echo "   Cardápio do cliente: http://${IP:-SERVIDOR}/   (abre /cardapio/)"
+  echo "   Painel do bar:       http://${IP:-SERVIDOR}/admin/"
   if [[ -n "$SENHA_ADMIN_GERADA" ]]; then
     echo
     echo "   Login inicial do painel:  admin  /  $SENHA_ADMIN_GERADA"
