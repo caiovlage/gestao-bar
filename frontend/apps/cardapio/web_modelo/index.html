@@ -7,10 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F4EEE3">
   <meta name="color-scheme" content="light">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Entre Nós">
   <meta name="format-detection" content="telephone=no">
   <meta name="description" content="Entre Nós · Bar de Piscina & Bistrô. Peça pelo celular e receba no seu apartamento.">
   <!-- Prévia ao colar o link (WhatsApp, Instagram, Facebook, Telegram…). O nginx troca __ORIGEM__
@@ -34,7 +30,6 @@
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="manifest" href="manifest.json">
   <style>
     html, body { margin: 0; height: 100%; background: #F4EEE3; }
     /* Tela de carregamento: aparece na hora, enquanto o app é baixado */
@@ -108,6 +103,7 @@
       });
     })();
   </script>
+  <script src="remover-service-worker.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

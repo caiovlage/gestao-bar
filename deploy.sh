@@ -359,8 +359,10 @@ main() {
     if [[ ! -d frontend/apps/cardapio/web ]]; then
       (cd frontend/apps/cardapio && flutter create . --platforms=web --project-name gestao_bar_cardapio --no-pub >/dev/null)
     fi
-    # Página inicial otimizada para celular, ícones da marca, manifest e imagem de prévia de link
+    # Página inicial otimizada para celular, ícones da marca e imagem de prévia de link
     cp -r frontend/apps/cardapio/web_modelo/. frontend/apps/cardapio/web/
+    # cardápio não é instalável: sem manifest (o flutter create gera um)
+    rm -f frontend/apps/cardapio/web/manifest.json
     # Painel: index, ícones, manifest e notificações push (push-sw.js, push-cliente.js)
     cp -r frontend/apps/admin/web_modelo/. frontend/apps/admin/web/
     if [[ $LIMPO -eq 1 ]]; then
