@@ -8,3 +8,7 @@ Future<String> desativarPush() async => '';
 Future<String> endpointPush() async => '';
 
 String nomeAparelho() => 'Aparelho';
+
+Future<String> instalacaoApp() async => 'nao';
+
+Future<String> instalarApp() async => 'indisponivel';

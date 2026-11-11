@@ -1,17 +1,55 @@
 {
+  "id": "/admin/",
   "name": "Entre Nós · Painel",
-  "short_name": "Entre Nós Painel",
-  "description": "Painel de gestão do bar.",
-  "start_url": ".",
+  "short_name": "Entre Nós",
+  "description": "Painel do Entre Nós · Bar de Piscina & Bistrô: pedidos do cardápio com aviso no celular, comandas, PDV e caixa, estoque, compras e relatórios.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/admin/",
+  "scope": "/admin/",
   "display": "standalone",
-  "background_color": "#F4EEE3",
+  "orientation": "any",
+  "background_color": "#123F2D",
   "theme_color": "#123F2D",
-  
+  "categories": ["business", "food", "productivity"],
   "prefer_related_applications": false,
   "icons": [
-    { "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "screenshots": [
+    {
+      "src": "capturas/apresentacao-estreita.jpg", "sizes": "1080x1920", "type": "image/jpeg",
+      "form_factor": "narrow", "label": "Entre Nós · Painel do bar"
+    },
+    {
+      "src": "capturas/login-estreito.jpg", "sizes": "1080x1920", "type": "image/jpeg",
+      "form_factor": "narrow", "label": "Acesso da equipe"
+    },
+    {
+      "src": "capturas/apresentacao-larga.jpg", "sizes": "1920x1080", "type": "image/jpeg",
+      "form_factor": "wide", "label": "Entre Nós · Painel do bar"
+    },
+    {
+      "src": "capturas/login-largo.jpg", "sizes": "1920x1080", "type": "image/jpeg",
+      "form_factor": "wide", "label": "Acesso da equipe"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedidos", "short_name": "Pedidos", "description": "Pedidos do cardápio",
+      "url": "/admin/pedidos", "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Comandas", "short_name": "Comandas", "description": "Contas abertas",
+      "url": "/admin/comandas", "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "PDV", "short_name": "PDV", "description": "Abrir o ponto de venda",
+      "url": "/admin/pdv", "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

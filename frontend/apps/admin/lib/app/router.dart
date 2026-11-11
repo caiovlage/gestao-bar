@@ -18,6 +18,7 @@ import '../features/em_breve/em_breve_page.dart';
 import '../features/estoque/estoque_page.dart';
 import '../features/estoque/inventario_page.dart';
 import '../features/fornecedores/fornecedores_page.dart';
+import '../features/notificacoes/lembrete_notificacoes.dart';
 import '../features/pedidos/pedidos_page.dart';
 import '../features/produtos/produto_form_page.dart';
 import '../features/produtos/produtos_page.dart';
@@ -60,7 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // PDV em tela cheia, fora do menu lateral do painel
       GoRoute(path: '/pdv', builder: (_, _) => const PdvPage()),
       ShellRoute(
-        builder: (context, state, child) => AdminShell(child: child),
+        builder: (context, state, child) => AdminShell(child: LembreteNotificacoes(child: child)),
         routes: [
           GoRoute(path: '/dashboard', builder: (_, _) => const DashboardPage()),
           GoRoute(path: '/relatorios', builder: (_, _) => const RelatoriosPage()),

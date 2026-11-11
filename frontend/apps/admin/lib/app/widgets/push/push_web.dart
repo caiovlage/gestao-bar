@@ -30,3 +30,9 @@ String nomeAparelho() {
   if (api == null) return 'Navegador';
   return api.callMethod<JSString>('nomeAparelho'.toJS).toDart;
 }
+
+/// instalado | sim | ios | nao
+Future<String> instalacaoApp() async => _api == null ? 'nao' : _chamar('instalacao');
+
+/// accepted | dismissed | indisponivel
+Future<String> instalarApp() => _chamar('instalar');

@@ -34,6 +34,17 @@
     });
   }
 
+  // Instalação do app (Android/computador): o navegador avisa que dá para instalar; guardamos o
+  // evento para o botão "Instalar o app" do painel. No iPhone não existe: é pelo Compartilhar.
+  var pedidoInstalacao = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    pedidoInstalacao = e;
+  });
+  window.addEventListener('appinstalled', function () {
+    pedidoInstalacao = null;
+  });
+
   window.entreNosPush = {
     /** inseguro | ios-instalar | nao-suportado | bloqueado | inativo | ativo */
     estado: function () {
@@ -79,6 +90,23 @@
 
     endpoint: function () {
       return inscricaoAtual().then(function (sub) { return sub ? sub.endpoint : ''; }).catch(function () { return ''; });
+    },
+
+    /** instalado | sim (pode instalar agora) | ios (Compartilhar → Adicionar à Tela de Início) | nao */
+    instalacao: function () {
+      if (instaladoNaTela()) return Promise.resolve('instalado');
+      if (pedidoInstalacao) return Promise.resolve('sim');
+      return Promise.resolve(ehIos() ? 'ios' : 'nao');
+    },
+
+    /** Abre a instalação nativa do navegador; devolve accepted | dismissed | indisponivel. */
+    instalar: function () {
+      if (!pedidoInstalacao) return Promise.resolve('indisponivel');
+      var p = pedidoInstalacao;
+      pedidoInstalacao = null;
+      return p.prompt().then(function () { return p.userChoice; })
+        .then(function (r) { return r.outcome; })
+        .catch(function () { return 'indisponivel'; });
     },
 
     /** Nome amigável do aparelho (ex.: "Android · Chrome"). */
