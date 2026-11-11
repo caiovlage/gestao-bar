@@ -261,13 +261,15 @@ main() {
 
   # Atrás do Cloudflare: redirecionamentos relativos e prévia de link com https
   if [[ -f "$NGINX_CONF" ]] && { ! sudo grep -q 'absolute_redirect off' "$NGINX_CONF" \
-       || sudo grep -q "sub_filter '__ORIGEM__' '\$scheme://\$host'" "$NGINX_CONF"; }; then
+       || sudo grep -q "sub_filter '__ORIGEM__' '\$scheme://\$host'" "$NGINX_CONF" \
+       || sudo grep -q 'proxy_set_header X-Forwarded-Proto \$scheme;' "$NGINX_CONF"; }; then
     info "Ajustando o nginx para HTTPS via proxy (Cloudflare)"
     sudo cp "$NGINX_CONF" "$NGINX_CONF.antes-proxy"
     if ! sudo grep -q 'absolute_redirect off' "$NGINX_CONF"; then
       sudo sed -i '0,/server_tokens off;/s//server_tokens off;\n    absolute_redirect off;/' "$NGINX_CONF"
     fi
     sudo sed -i "s#sub_filter '__ORIGEM__' '\$scheme://\$host';#sub_filter '__ORIGEM__' '\$esquema_publico://\$host';#" "$NGINX_CONF"
+    sudo sed -i 's#proxy_set_header X-Forwarded-Proto \$scheme;#proxy_set_header X-Forwarded-Proto $esquema_publico;#' "$NGINX_CONF"
     if sudo nginx -t -q 2>/dev/null; then
       ok "nginx ajustado (cópia anterior: $NGINX_CONF.antes-proxy)"
     else

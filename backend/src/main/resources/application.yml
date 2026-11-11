@@ -1,3 +1,9 @@
+server:
+  # Atrás do nginx (e do Cloudflare): usa X-Forwarded-Proto/Host para saber que o acesso original foi
+  # https. Sem isso, o login pelo https://domínio é recusado como origem diferente (CORS, 403).
+  # Seguro porque o backend só é acessível pelo nginx (127.0.0.1).
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: gestao-bar
