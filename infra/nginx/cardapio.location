@@ -2,6 +2,9 @@
     location /cardapio/ {
         try_files $uri $uri/ /cardapio/index.html;
         add_header Cache-Control "no-cache";
+        # Prévia de link (WhatsApp etc.): a imagem precisa de endereço completo; o nginx preenche.
+        sub_filter '__ORIGEM__' '$scheme://$host';
+        sub_filter_once off;
     }
 
     location = /cardapio { return 301 /cardapio/; }

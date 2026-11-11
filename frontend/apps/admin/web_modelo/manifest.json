@@ -1,0 +1,17 @@
+{
+  "name": "Entre Nós · Painel",
+  "short_name": "Entre Nós Painel",
+  "description": "Painel de gestão do bar.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F4EEE3",
+  "theme_color": "#123F2D",
+  
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

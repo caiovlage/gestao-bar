@@ -118,6 +118,9 @@ Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho
 - Só aparecem no cardápio produtos marcados **"Disponível no cardápio digital"**, com preço, de
   categorias visíveis no cardápio. Desligue **"Cardápio aberto para pedidos"** para pausar os
   pedidos (ex.: sem entregadores).
+- **Prévia do link**: ao colar o link no WhatsApp aparece a imagem da marca. O WhatsApp guarda a prévia
+  por alguns dias: se colou o link antes da atualização, a imagem nova pode demorar a aparecer
+  (teste com `http://SERVIDOR/cardapio/?v=2`).
 - **Vitrine** (Configurações → Vitrine do cardápio): escolha as seções de destaque do topo do cardápio
   (Sugestões da casa, Promoções, Mais pedidos, Menos pedidos, Novidades), a ordem, os títulos e a
   quantidade. Promoções e sugestões são definidas no cadastro de cada produto.

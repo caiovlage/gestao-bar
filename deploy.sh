@@ -239,6 +239,23 @@ main() {
     fi
   fi
 
+  # Prévia de link do cardápio (WhatsApp): sub_filter que preenche o endereço da imagem.
+  if [[ -f "$NGINX_CONF" ]] && sudo grep -q 'location /cardapio/' "$NGINX_CONF" \
+     && ! sudo grep -q '__ORIGEM__' "$NGINX_CONF"; then
+    info "Configurando a prévia de link do cardápio (WhatsApp)"
+    sudo cp "$NGINX_CONF" "$NGINX_CONF.antes-previa"
+    sudo awk -v trecho="$(cat infra/nginx/cardapio-og.trecho)" \
+        '{print} !feito && /try_files \$uri \$uri\/ \/cardapio\/index.html;/{print trecho; feito=1}' \
+        "$NGINX_CONF.antes-previa" | sudo tee "$NGINX_CONF" >/dev/null
+    if sudo nginx -t -q 2>/dev/null; then
+      ok "Prévia de link configurada (cópia anterior: $NGINX_CONF.antes-previa)"
+    else
+      sudo cp "$NGINX_CONF.antes-previa" "$NGINX_CONF"
+      aviso "Não foi possível configurar a prévia de link; configuração anterior restaurada."
+      aviso "Copie manualmente as linhas de infra/nginx/cardapio-og.trecho para o bloco location /cardapio/."
+    fi
+  fi
+
   # Endereço principal (http://SERVIDOR/) passou a abrir o cardápio; instalações antigas iam ao painel.
   if [[ -f "$NGINX_CONF" ]] && sudo grep -q 'location = / { return 302 /admin/; }' "$NGINX_CONF"; then
     info "Endereço principal: redirecionando para o cardápio (/cardapio/)"
@@ -320,9 +337,11 @@ main() {
     if [[ ! -d frontend/apps/cardapio/web ]]; then
       (cd frontend/apps/cardapio && flutter create . --platforms=web --project-name gestao_bar_cardapio --no-pub >/dev/null)
     fi
-    # Página inicial otimizada para celular (tela de carregamento imediata, cores, ícone na tela inicial)
-    cp frontend/apps/cardapio/web_modelo/index.html frontend/apps/cardapio/web/index.html
-    sed -i 's/"name": *"[^"]*"/"name": "Entre Nós · Cardápio"/; s/"short_name": *"[^"]*"/"short_name": "Entre Nós"/; s/"background_color": *"[^"]*"/"background_color": "#F4EEE3"/; s/"theme_color": *"[^"]*"/"theme_color": "#F4EEE3"/'         frontend/apps/cardapio/web/manifest.json
+    # Página inicial otimizada para celular, ícones da marca, manifest e imagem de prévia de link
+    cp -r frontend/apps/cardapio/web_modelo/. frontend/apps/cardapio/web/
+    # Painel: ícones da marca, manifest e título da aba
+    cp -r frontend/apps/admin/web_modelo/. frontend/apps/admin/web/
+    sed -i 's#<title>.*</title>#<title>Entre Nós · Painel</title>#' frontend/apps/admin/web/index.html
     if [[ $LIMPO -eq 1 ]]; then
       (cd frontend/apps/admin && flutter clean >/dev/null)
       (cd frontend/apps/cardapio && flutter clean >/dev/null)
