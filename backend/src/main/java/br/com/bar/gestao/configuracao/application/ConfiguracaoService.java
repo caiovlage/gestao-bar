@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 public class ConfiguracaoService {
 
     public static final String NOME_BAR = "nome_bar";
+    public static final String CARDAPIO_SUBTITULO = "cardapio_subtitulo";
+    public static final String CARDAPIO_SLOGAN = "cardapio_slogan";
     public static final String CARDAPIO_ABERTO = "cardapio_aberto";
     public static final String PERMITIR_ESTOQUE_NEGATIVO = "permitir_estoque_negativo";
 

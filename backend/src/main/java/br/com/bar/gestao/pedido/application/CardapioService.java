@@ -85,7 +85,9 @@ public class CardapioService {
                             i.imagemUrl(), i.esgotado(), i.destaque()));
         }
         String nome = configuracao.valor(ConfiguracaoService.NOME_BAR);
-        return new PedidoDto.Cardapio(nome == null ? "Cardápio" : nome, aberto(), List.copyOf(categorias.values()),
+        return new PedidoDto.Cardapio(nome == null ? "Cardápio" : nome,
+                configuracao.valor(ConfiguracaoService.CARDAPIO_SUBTITULO),
+                configuracao.valor(ConfiguracaoService.CARDAPIO_SLOGAN), aberto(), List.copyOf(categorias.values()),
                 destaques(itens));
     }
 

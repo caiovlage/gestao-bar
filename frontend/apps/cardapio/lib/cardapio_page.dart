@@ -5,6 +5,7 @@ import 'package:core/core.dart' show formatarMoeda, mensagemDeErro;
 import 'package:flutter/material.dart';
 
 import 'dados.dart';
+import 'logo.dart';
 import 'pedido_page.dart';
 import 'tema.dart';
 
@@ -190,7 +191,7 @@ class _CardapioPageState extends State<CardapioPage> {
 
     return Scaffold(
       body: RefreshIndicator(
-        color: Paleta.ouro,
+        color: Paleta.verde,
         onRefresh: () async {
           _recarregar();
           await _carregarMeusPedidos();
@@ -198,7 +199,7 @@ class _CardapioPageState extends State<CardapioPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _Cabecalho(nomeBar: c.nomeBar, aoAtualizar: _recarregar),
+            _Cabecalho(nomeBar: c.nomeBar, subtitulo: c.subtitulo, slogan: c.slogan, aoAtualizar: _recarregar),
             SliverPersistentHeader(
               pinned: true,
               delegate: _BarraFiltros(
@@ -333,12 +334,14 @@ String _semAcento(String texto) {
 // =============================================================================
 
 class _Cabecalho extends StatelessWidget {
-  const _Cabecalho({required this.nomeBar, required this.aoAtualizar});
+  const _Cabecalho({required this.nomeBar, this.subtitulo, this.slogan, required this.aoAtualizar});
 
   final String nomeBar;
+  final String? subtitulo;
+  final String? slogan;
   final VoidCallback aoAtualizar;
 
-  static const _alturaAberta = 236.0;
+  static const _alturaAberta = 320.0;
 
   @override
   Widget build(BuildContext context) {
@@ -348,62 +351,75 @@ class _Cabecalho extends StatelessWidget {
       backgroundColor: Paleta.fundo,
       surfaceTintColor: Colors.transparent,
       actions: [
-        IconButton(
-            tooltip: 'Atualizar', onPressed: aoAtualizar, icon: const Icon(Icons.refresh, color: Paleta.textoSuave)),
+        IconButton(tooltip: 'Atualizar', onPressed: aoAtualizar, icon: const Icon(Icons.refresh, color: Paleta.verde)),
       ],
       flexibleSpace: LayoutBuilder(builder: (context, c) {
         final topo = MediaQuery.paddingOf(context).top;
         // 1 = totalmente aberto, 0 = recolhido
         final aberto = ((c.maxHeight - kToolbarHeight - topo) / (_alturaAberta - kToolbarHeight)).clamp(0.0, 1.0);
         return Stack(fit: StackFit.expand, children: [
-          // brilho dourado suave, como luz baixa de balcão
-          Opacity(
-            opacity: aberto,
-            child: const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(0, -0.5),
-                  radius: 1.1,
-                  colors: [Color(0x40D4AF6A), Color(0x10D4AF6A), Paleta.fundo],
-                  stops: [0, 0.45, 1],
-                ),
+          // papel off-white com luz quente de fim de tarde e a areia ao pé do cabeçalho
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment(-0.7, -1.1),
+                radius: 1.4,
+                colors: [Color(0x55E3CBA0), Color(0x14E3CBA0), Paleta.fundo],
+                stops: [0, 0.5, 1],
               ),
             ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 1,
+            child: Opacity(opacity: 1 - aberto, child: const ColoredBox(color: Paleta.linha)),
           ),
           if (aberto > 0.05)
             Opacity(
               opacity: Curves.easeIn.transform(aberto),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 36, 24, 12),
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text('BEM-VINDO AO', style: rotuloEspacado(cor: Paleta.textoSuave)),
-                    const SizedBox(height: 8),
+                    const SimboloMarca(largura: 132),
+                    const SizedBox(height: 2),
                     FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text(nomeBar, textAlign: TextAlign.center, style: serifa(40, altura: 1.05)),
+                      child: Text(nomeBar, textAlign: TextAlign.center, style: serifa(48, peso: FontWeight.w500, altura: 1)),
                     ),
-                    const SizedBox(height: 12),
-                    const _Ornamento(),
-                    const SizedBox(height: 12),
+                    if (subtitulo != null && subtitulo!.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(subtitulo!.toUpperCase(), style: rotuloEspacado(tamanho: 12)),
+                      ),
+                    ],
+                    if (slogan != null && slogan!.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      FraseComLinhas(slogan!),
+                    ],
+                    const SizedBox(height: 14),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
+                        color: Paleta.superficie,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Paleta.ouroEscuro),
+                        border: Border.all(color: Paleta.douradoSuave),
                       ),
                       child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.delivery_dining_outlined, size: 16, color: Paleta.ouro),
+                        Icon(Icons.delivery_dining_outlined, size: 16, color: Paleta.piscina),
                         SizedBox(width: 6),
                         Text('Entrega no seu apartamento',
-                            style: TextStyle(color: Paleta.ouroClaro, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: Paleta.verde, fontWeight: FontWeight.w600)),
                       ]),
                     ),
                   ]),
                 ),
               ),
             ),
-          // nome compacto quando recolhido
+          // marca compacta quando recolhido
           Positioned(
             left: 56,
             right: 56,
@@ -412,9 +428,13 @@ class _Cabecalho extends StatelessWidget {
             child: IgnorePointer(
               child: Opacity(
                 opacity: (1 - aberto * 2).clamp(0.0, 1.0),
-                child: Center(
-                  child: Text(nomeBar, maxLines: 1, overflow: TextOverflow.ellipsis, style: serifa(20)),
-                ),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const SimboloMarca(largura: 40),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(nomeBar, maxLines: 1, overflow: TextOverflow.ellipsis, style: serifa(22, peso: FontWeight.w500)),
+                  ),
+                ]),
               ),
             ),
           ),
@@ -433,14 +453,14 @@ class _Ornamento extends StatelessWidget {
           width: 48,
           height: 1,
           decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.transparent, Paleta.ouro, Colors.transparent]),
+            gradient: LinearGradient(colors: [Colors.transparent, Paleta.douradoSuave, Colors.transparent]),
           ),
         );
     return Row(mainAxisSize: MainAxisSize.min, children: [
       linha(),
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 10),
-        child: Icon(Icons.local_bar, size: 16, color: Paleta.ouro),
+        child: SimboloMarca(largura: 34),
       ),
       linha(),
     ]);
@@ -466,7 +486,7 @@ class _TituloSecao extends StatelessWidget {
         ],
       ]),
       const SizedBox(height: 6),
-      Container(width: 36, height: 2, color: Paleta.ouro),
+      Container(width: 36, height: 2, color: Paleta.douradoSuave),
       if (subtitulo != null) ...[
         const SizedBox(height: 8),
         Text(subtitulo!, style: const TextStyle(color: Paleta.textoSuave, fontSize: 13)),
@@ -565,7 +585,7 @@ class _BarraFiltros extends SliverPersistentHeaderDelegate {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
-                      borderSide: const BorderSide(color: Paleta.ouro),
+                      borderSide: const BorderSide(color: Paleta.verde),
                     ),
                   ),
                 ),
@@ -583,7 +603,7 @@ class _BarraFiltros extends SliverPersistentHeaderDelegate {
                     value: o,
                     child: Row(children: [
                       Icon(o == ordem ? Icons.radio_button_checked : Icons.radio_button_off,
-                          size: 18, color: Paleta.ouro),
+                          size: 18, color: Paleta.verde),
                       const SizedBox(width: 10),
                       Text(o.rotulo),
                     ]),
@@ -594,7 +614,7 @@ class _BarraFiltros extends SliverPersistentHeaderDelegate {
                 height: 46,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: ordem == _Ordem.relevancia ? Paleta.superficieAlta : Paleta.ouro,
+                  color: ordem == _Ordem.relevancia ? Paleta.superficieAlta : Paleta.verde,
                   border: Border.all(color: Paleta.linha),
                 ),
                 child: Icon(Icons.tune, color: ordem == _Ordem.relevancia ? Paleta.texto : Paleta.fundo),
@@ -701,7 +721,7 @@ class _VitrinePrincipalState extends State<_VitrinePrincipal> {
                   width: i == _atual ? 20 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: i == _atual ? Paleta.ouro : Paleta.linha,
+                    color: i == _atual ? Paleta.verde : Paleta.linha,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -784,13 +804,13 @@ class _CartaoDestaque extends StatelessWidget {
           child: InkWell(
             onTap: p.esgotado ? null : aoTocar,
             child: Stack(fit: StackFit.expand, children: [
-              _Foto(url: p.imagemUrl, tamanhoIcone: grande ? 64 : 40),
+              _Foto(url: p.imagemUrl, tamanhoIcone: grande ? 64 : 40, escuro: true),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x00000000), Color(0x33000000), Color(0xE60E0C0A)],
+                    colors: [Color(0x00000000), Color(0x330B2A1E), Color(0xEE0B2A1E)],
                     stops: [0.35, 0.55, 1],
                   ),
                 ),
@@ -813,17 +833,17 @@ class _CartaoDestaque extends StatelessWidget {
                   Text(p.nome,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: serifa(grande ? 26 : 18, altura: 1.1)),
+                      style: serifa(grande ? 26 : 18, altura: 1.1, cor: Paleta.sobreFoto)),
                   if (grande && p.descricao != null && p.descricao!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(p.descricao!,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Paleta.textoSuave, fontSize: 13, height: 1.35)),
+                        style: const TextStyle(color: Paleta.sobreFotoSuave, fontSize: 13, height: 1.35)),
                   ],
                   SizedBox(height: grande ? 12 : 8),
                   Row(children: [
-                    Expanded(child: _Preco(produto: p, tamanho: grande ? 20 : 16)),
+                    Expanded(child: _Preco(produto: p, tamanho: grande ? 20 : 16, sobreFoto: true)),
                     if (!p.esgotado) _BotaoMais(tamanho: grande ? 40 : 32),
                   ]),
                 ]),
@@ -849,9 +869,9 @@ class _Posicao extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Paleta.fundo.withValues(alpha: 0.75),
-        border: Border.all(color: Paleta.ouro),
+        border: Border.all(color: Paleta.verde),
       ),
-      child: Text('$numero', style: serifa(16, cor: Paleta.ouro)),
+      child: Text('$numero', style: serifa(16, cor: Paleta.verde)),
     );
   }
 }
@@ -921,7 +941,7 @@ class _LinhaProduto extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(horizontal: 10),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: Paleta.ouro,
+                                  color: Paleta.verde,
                                   borderRadius: BorderRadius.circular(17),
                                   border: Border.all(color: Paleta.fundo, width: 3),
                                 ),
@@ -1009,8 +1029,8 @@ class _CardapioVazio extends StatelessWidget {
         Container(
           width: 84,
           height: 84,
-          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Paleta.ouroEscuro)),
-          child: const Icon(Icons.restaurant_menu, size: 38, color: Paleta.ouro),
+          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Paleta.douradoSuave)),
+          child: const Icon(Icons.restaurant_menu, size: 38, color: Paleta.verde),
         ),
         const SizedBox(height: 20),
         Text('Cardápio em preparação', textAlign: TextAlign.center, style: serifa(24)),
@@ -1032,22 +1052,33 @@ class _CardapioVazio extends StatelessWidget {
 // =============================================================================
 
 class _Foto extends StatelessWidget {
-  const _Foto({required this.url, required this.tamanhoIcone});
+  const _Foto({required this.url, required this.tamanhoIcone, this.escuro = false});
 
   final String? url;
   final double tamanhoIcone;
 
+  /// Sem foto: fundo verde da marca (cartões com texto claro) em vez do areia.
+  final bool escuro;
+
   @override
   Widget build(BuildContext context) {
     final vazio = DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Paleta.superficieAlta, Paleta.superficie],
+          colors: escuro ? const [Paleta.verdeMedio, Paleta.verde] : const [Paleta.superficieAlta, Paleta.areia],
         ),
       ),
-      child: Center(child: Icon(Icons.local_bar_outlined, size: tamanhoIcone, color: Paleta.ouroEscuro)),
+      child: Center(
+        child: escuro
+            ? Padding(
+                padding: const EdgeInsets.only(bottom: 40),
+                child: SimboloMarca(
+                    largura: tamanhoIcone * 2, corMontanha: Paleta.douradoClaro, corSol: Paleta.douradoSuave),
+              )
+            : Icon(Icons.local_bar_outlined, size: tamanhoIcone, color: Paleta.verde.withValues(alpha: 0.5)),
+      ),
     );
     if (url == null) return vazio;
     return Image.network(
@@ -1066,10 +1097,11 @@ class _Foto extends StatelessWidget {
 }
 
 class _Preco extends StatelessWidget {
-  const _Preco({required this.produto, required this.tamanho});
+  const _Preco({required this.produto, required this.tamanho, this.sobreFoto = false});
 
   final ProdutoCardapio produto;
   final double tamanho;
+  final bool sobreFoto;
 
   @override
   Widget build(BuildContext context) {
@@ -1080,17 +1112,17 @@ class _Preco extends StatelessWidget {
     return Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
       Text(formatarMoeda(p.preco),
           style: TextStyle(
-            color: p.emPromocao ? Paleta.promocao : Paleta.ouro,
+            color: sobreFoto ? Paleta.douradoClaro : (p.emPromocao ? Paleta.promocao : Paleta.verde),
             fontWeight: FontWeight.w700,
             fontSize: tamanho,
           )),
       if (p.emPromocao)
         Text(formatarMoeda(p.precoOriginal),
             style: TextStyle(
-              color: Paleta.textoSuave,
+              color: sobreFoto ? Paleta.sobreFotoSuave : Paleta.textoSuave,
               fontSize: tamanho - 4,
               decoration: TextDecoration.lineThrough,
-              decorationColor: Paleta.textoSuave,
+              decorationColor: sobreFoto ? Paleta.sobreFotoSuave : Paleta.textoSuave,
             )),
     ]);
   }
@@ -1114,8 +1146,8 @@ class _Etiquetas extends StatelessWidget {
     final p = produto;
     final etiquetas = <Widget>[
       if (p.emPromocao) _Etiqueta('−${p.descontoPercentual}%', cor: Paleta.promocao, cheia: true),
-      if (p.sugestao) _Etiqueta(compacto ? 'Sugestão' : 'Sugestão da casa', cor: Paleta.ouro, icone: Icons.star),
-      if (maisPedido) _Etiqueta('Mais pedido', cor: Paleta.ouroClaro, icone: Icons.local_fire_department),
+      if (p.sugestao) _Etiqueta(compacto ? 'Sugestão' : 'Sugestão da casa', cor: Paleta.verde, icone: Icons.star),
+      if (maisPedido) _Etiqueta('Mais pedido', cor: Paleta.dourado, icone: Icons.local_fire_department),
     ];
     if (etiquetas.isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -1172,7 +1204,7 @@ class _BotaoMais extends StatelessWidget {
       height: tamanho,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Paleta.ouro,
+        color: Paleta.verde,
         border: Border.all(color: Paleta.fundo, width: 3),
       ),
       child: Icon(Icons.add, size: tamanho * 0.55, color: Paleta.fundo),
@@ -1195,7 +1227,7 @@ class _BotaoCarrinho extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 24, offset: Offset(0, 8))],
+            boxShadow: const [BoxShadow(color: Color(0x40123F2D), blurRadius: 20, offset: Offset(0, 8))],
           ),
           child: FilledButton(
             onPressed: aoTocar,
@@ -1210,7 +1242,7 @@ class _BotaoCarrinho extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(shape: BoxShape.circle, color: Paleta.fundo),
                 child: Text('${carrinho.quantidade}',
-                    style: const TextStyle(color: Paleta.ouro, fontSize: 13, fontWeight: FontWeight.w800)),
+                    style: const TextStyle(color: Paleta.verde, fontSize: 13, fontWeight: FontWeight.w800)),
               ),
               const SizedBox(width: 12),
               const Expanded(child: Text('Ver meu pedido')),
@@ -1237,10 +1269,10 @@ class _Aviso extends StatelessWidget {
       decoration: BoxDecoration(
         color: Paleta.superficie,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Paleta.ouroEscuro),
+        border: Border.all(color: Paleta.douradoSuave),
       ),
       child: Row(children: [
-        Icon(icone, color: Paleta.ouro),
+        Icon(icone, color: Paleta.verde),
         const SizedBox(width: 12),
         Expanded(child: Text(texto, style: const TextStyle(height: 1.4))),
       ]),
@@ -1259,7 +1291,7 @@ class _AvisoPedido extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Material(
-        color: Paleta.ouro,
+        color: Paleta.verde,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -1406,12 +1438,12 @@ class _Quantidade extends StatelessWidget {
         border: Border.all(color: Paleta.linha),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(onPressed: aoMenos, icon: Icon(iconeMenos, size: 20), color: Paleta.ouro),
+        IconButton(onPressed: aoMenos, icon: Icon(iconeMenos, size: 20), color: Paleta.verde),
         SizedBox(
           width: 28,
           child: Text('$valor', textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         ),
-        IconButton(onPressed: aoMais, icon: const Icon(Icons.add, size: 20), color: Paleta.ouro),
+        IconButton(onPressed: aoMais, icon: const Icon(Icons.add, size: 20), color: Paleta.verde),
       ]),
     );
   }
@@ -1508,7 +1540,7 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
                   child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     Text('Seu pedido', style: serifa(28)),
                     const SizedBox(height: 4),
-                    Container(width: 36, height: 2, color: Paleta.ouro),
+                    Container(width: 36, height: 2, color: Paleta.verde),
                     const SizedBox(height: 16),
                     for (final i in c.itens)
                       Padding(
@@ -1522,7 +1554,7 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
                                     style: const TextStyle(
                                         color: Paleta.textoSuave, fontSize: 13, fontStyle: FontStyle.italic)),
                               const SizedBox(height: 2),
-                              Text(formatarMoeda(i.total), style: const TextStyle(color: Paleta.ouro)),
+                              Text(formatarMoeda(i.total), style: const TextStyle(color: Paleta.verde)),
                             ]),
                           ),
                           _Quantidade(
@@ -1536,7 +1568,7 @@ class _CarrinhoSheetState extends State<_CarrinhoSheet> {
                     const Divider(height: 20),
                     Row(children: [
                       const Expanded(child: Text('Total', style: TextStyle(fontSize: 17))),
-                      Text(formatarMoeda(c.total), style: serifa(26, cor: Paleta.ouro)),
+                      Text(formatarMoeda(c.total), style: serifa(26, cor: Paleta.verde)),
                     ]),
                     const SizedBox(height: 4),
                     const Text('O pagamento é feito na entrega.',

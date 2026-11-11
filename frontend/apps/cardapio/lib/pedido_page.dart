@@ -103,7 +103,7 @@ class _PedidoPageState extends State<PedidoPage> {
                               const Divider(height: 24),
                               Row(children: [
                                 const Expanded(child: Text('Total', style: TextStyle(fontSize: 16))),
-                                Text(formatarMoeda(p.total), style: serifa(24, cor: Paleta.ouro)),
+                                Text(formatarMoeda(p.total), style: serifa(24, cor: Paleta.verde)),
                               ]),
                               const SizedBox(height: 4),
                               Text(
@@ -148,7 +148,7 @@ class _Cabecalho extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cancelado = pedido.etapa == EtapaPedido.cancelado;
-    final cor = cancelado ? Paleta.erro : Paleta.ouro;
+    final cor = cancelado ? Paleta.erro : Paleta.verde;
     return Column(children: [
       const SizedBox(height: 8),
       CircleAvatar(
@@ -199,13 +199,13 @@ class _Linha extends StatelessWidget {
             child: Container(
               height: 3,
               margin: const EdgeInsets.only(bottom: 22),
-              color: etapa.index >= _passos[i].$1.index ? Paleta.ouro : Paleta.linha,
+              color: etapa.index >= _passos[i].$1.index ? Paleta.verde : Paleta.linha,
             ),
           ),
         Column(children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: etapa.index >= _passos[i].$1.index ? Paleta.ouro : Paleta.linha,
+            backgroundColor: etapa.index >= _passos[i].$1.index ? Paleta.verde : Paleta.linha,
             child: etapa.index >= _passos[i].$1.index
                 ? const Icon(Icons.check, size: 14, color: Paleta.fundo)
                 : null,

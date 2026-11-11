@@ -26,8 +26,8 @@ public final class PedidoDto {
     // ---------------------------------------------------------------- cardápio público
 
     /** {@code destaques}: seções da vitrine, na ordem configurada no painel (só as ativas e com produtos). */
-    public record Cardapio(String nomeBar, boolean aberto, List<CategoriaCardapio> categorias,
-                           List<SecaoDestaque> destaques) {
+    public record Cardapio(String nomeBar, String subtitulo, String slogan, boolean aberto,
+                           List<CategoriaCardapio> categorias, List<SecaoDestaque> destaques) {
     }
 
     /** Seção de destaque: {@code produtos} são ids de produtos presentes em {@code categorias}. */

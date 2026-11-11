@@ -2,42 +2,58 @@ import 'dart:ui' show FontVariation;
 
 import 'package:flutter/material.dart';
 
-/// Identidade do cardápio: bar sofisticado — preto quente, dourado e tipografia serifada.
+/// Identidade do cardápio (Entre Nós · bar de piscina & bistrô): off-white e areia, verde profundo,
+/// azul piscina e dourado suave, com tipografia serifada.
 abstract final class Paleta {
-  static const fundo = Color(0xFF0E0C0A);
-  static const superficie = Color(0xFF181411);
-  static const superficieAlta = Color(0xFF221D18);
-  static const linha = Color(0xFF2F2822);
-  static const ouro = Color(0xFFD4AF6A);
-  static const ouroClaro = Color(0xFFE9CF98);
-  static const ouroEscuro = Color(0xFF9C7B3F);
-  static const texto = Color(0xFFF4EDE2);
-  static const textoSuave = Color(0xFFA89C8C);
-  static const promocao = Color(0xFFE2775B);
-  static const erro = Color(0xFFF08A7E);
-  static const sucesso = Color(0xFF7FCB8F);
+  // fundos
+  static const fundo = Color(0xFFF4EEE3); // off-white (também o texto sobre o verde)
+  static const superficie = Color(0xFFFBF8F2);
+  static const superficieAlta = Color(0xFFEDE4D3);
+  static const areia = Color(0xFFE3CBA0);
+  static const linha = Color(0xFFE0D3BC);
+  // marca
+  static const verde = Color(0xFF123F2D); // verde profundo: cor principal
+  static const verdeMedio = Color(0xFF1F5A43);
+  static const piscina = Color(0xFF2A8A86); // azul piscina
+  static const dourado = Color(0xFFA7802C); // dourado para textos
+  static const douradoSuave = Color(0xFFC9A04A); // dourado de ornamentos e bordas
+  // texto
+  static const texto = Color(0xFF1C2B23);
+  static const textoSuave = Color(0xFF6F6A5D);
+  // estados
+  static const promocao = piscina;
+  static const erro = Color(0xFFB3412E);
+  static const sucesso = Color(0xFF2E7D5B);
+  // sobre fotos (fundo escuro)
+  static const sobreFoto = Color(0xFFFFFFFF);
+  static const sobreFotoSuave = Color(0xCCFFFFFF);
+  static const douradoClaro = Color(0xFFE9CF98);
 }
 
 /// Títulos em Playfair Display (fonte variável: o peso é aplicado também como variação).
-TextStyle serifa(double tamanho, {FontWeight peso = FontWeight.w700, Color cor = Paleta.texto, double? altura}) =>
+TextStyle serifa(double tamanho,
+        {FontWeight peso = FontWeight.w600, Color cor = Paleta.verde, double? altura, bool italico = false}) =>
     TextStyle(
       fontFamily: 'Playfair',
       fontSize: tamanho,
       fontWeight: peso,
+      fontStyle: italico ? FontStyle.italic : FontStyle.normal,
       fontVariations: [FontVariation.weight(peso.value.toDouble())],
       color: cor,
       height: altura,
     );
 
-/// Rótulo pequeno em caixa alta e espaçado (ex.: "SUGESTÕES DA CASA").
-TextStyle rotuloEspacado({Color cor = Paleta.ouro, double tamanho = 11}) =>
-    TextStyle(fontSize: tamanho, letterSpacing: 2.4, fontWeight: FontWeight.w600, color: cor);
+/// Rótulo pequeno em caixa alta e espaçado (ex.: "BAR DE PISCINA & BISTRÔ").
+TextStyle rotuloEspacado({Color cor = Paleta.verde, double tamanho = 11}) =>
+    TextStyle(fontSize: tamanho, letterSpacing: 3, fontWeight: FontWeight.w600, color: cor);
 
 ThemeData temaCardapio() {
-  final esquema = ColorScheme.fromSeed(seedColor: Paleta.ouro, brightness: Brightness.dark).copyWith(
-    primary: Paleta.ouro,
+  final esquema = ColorScheme.fromSeed(seedColor: Paleta.verde, brightness: Brightness.light).copyWith(
+    primary: Paleta.verde,
     onPrimary: Paleta.fundo,
-    secondary: Paleta.ouroClaro,
+    secondary: Paleta.piscina,
+    onSecondary: Colors.white,
+    tertiary: Paleta.dourado,
     surface: Paleta.superficie,
     onSurface: Paleta.texto,
     error: Paleta.erro,
@@ -48,28 +64,32 @@ ThemeData temaCardapio() {
   );
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     colorScheme: esquema,
     scaffoldBackgroundColor: Paleta.fundo,
-    appBarTheme: const AppBarTheme(backgroundColor: Paleta.fundo, foregroundColor: Paleta.texto, elevation: 0),
+    appBarTheme: const AppBarTheme(backgroundColor: Paleta.fundo, foregroundColor: Paleta.verde, elevation: 0),
     cardTheme: CardThemeData(
       color: Paleta.superficie,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: Paleta.linha),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Paleta.superficieAlta,
+      fillColor: Paleta.superficie,
       border: borda,
       enabledBorder: borda,
-      focusedBorder: borda.copyWith(borderSide: const BorderSide(color: Paleta.ouro, width: 1.4)),
+      focusedBorder: borda.copyWith(borderSide: const BorderSide(color: Paleta.verde, width: 1.4)),
       labelStyle: const TextStyle(color: Paleta.textoSuave),
       hintStyle: const TextStyle(color: Paleta.textoSuave),
+      prefixIconColor: Paleta.verdeMedio,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: Paleta.ouro,
+        backgroundColor: Paleta.verde,
         foregroundColor: Paleta.fundo,
         disabledBackgroundColor: Paleta.linha,
         minimumSize: const Size(0, 54),
@@ -79,15 +99,16 @@ ThemeData temaCardapio() {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: Paleta.ouro,
-        side: const BorderSide(color: Paleta.ouroEscuro),
+        foregroundColor: Paleta.verde,
+        side: const BorderSide(color: Paleta.douradoSuave),
         minimumSize: const Size(0, 50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     ),
+    textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: Paleta.verde)),
     chipTheme: ChipThemeData(
       backgroundColor: Paleta.superficie,
-      selectedColor: Paleta.ouro,
+      selectedColor: Paleta.verde,
       side: const BorderSide(color: Paleta.linha),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       labelStyle: const TextStyle(color: Paleta.texto, fontWeight: FontWeight.w600),
@@ -95,12 +116,13 @@ ThemeData temaCardapio() {
       showCheckmark: false,
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: Paleta.superficie,
+      backgroundColor: Paleta.fundo,
       showDragHandle: true,
-      dragHandleColor: Paleta.linha,
+      dragHandleColor: Paleta.douradoSuave,
     ),
+    popupMenuTheme: const PopupMenuThemeData(color: Paleta.superficie),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
     dividerTheme: const DividerThemeData(color: Paleta.linha, space: 1),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(color: Paleta.ouro),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: Paleta.verde),
   );
 }

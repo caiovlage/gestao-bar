@@ -90,9 +90,13 @@ class SecaoDestaque {
 }
 
 class Cardapio {
-  const Cardapio(this.nomeBar, this.aberto, this.categorias, this.destaques);
+  const Cardapio(this.nomeBar, this.aberto, this.categorias, this.destaques, {this.subtitulo, this.slogan});
 
   final String nomeBar;
+
+  /// Textos do cabeçalho (Configurações), ex.: "Bar de Piscina & Bistrô" e "alma carioca, coração de bistrô".
+  final String? subtitulo;
+  final String? slogan;
   final bool aberto;
   final List<CategoriaCardapio> categorias;
   final List<SecaoDestaque> destaques;
@@ -122,6 +126,8 @@ class Cardapio {
       j['aberto'] as bool,
       categorias,
       destaques.where((s) => s.produtos.isNotEmpty).toList(),
+      subtitulo: j['subtitulo'] as String?,
+      slogan: j['slogan'] as String?,
     );
   }
 }

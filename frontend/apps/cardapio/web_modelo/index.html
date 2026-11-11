@@ -5,11 +5,11 @@
   <meta charset="UTF-8">
   <!-- Celular primeiro: largura do aparelho, área segura do notch, zoom permitido (acessibilidade) -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0E0C0A">
-  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#F4EEE3">
+  <meta name="color-scheme" content="light">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Cardápio">
   <meta name="format-detection" content="telephone=no">
   <meta name="description" content="Cardápio digital: faça seu pedido pelo celular.">
@@ -18,25 +18,25 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="manifest" href="manifest.json">
   <style>
-    html, body { margin: 0; height: 100%; background: #0E0C0A; }
+    html, body { margin: 0; height: 100%; background: #F4EEE3; }
     /* Tela de carregamento: aparece na hora, enquanto o app é baixado */
     #carregando {
       position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 16px; padding: 24px; box-sizing: border-box;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #F4EDE2; background: #0E0C0A; text-align: center; transition: opacity .3s;
+      color: #1C2B23; background: #F4EEE3; text-align: center; transition: opacity .3s;
     }
     #carregando .roda {
       width: 44px; height: 44px; border-radius: 50%;
-      border: 4px solid #2F2822; border-top-color: #D4AF6A;
+      border: 4px solid #E0D3BC; border-top-color: #123F2D;
       animation: girar .8s linear infinite;
     }
-    #carregando .titulo { font-family: Georgia, "Times New Roman", serif; font-size: 22px; color: #F4EDE2; }
-    #carregando p { margin: 0; font-size: 15px; color: #A89C8C; max-width: 320px; line-height: 1.5; }
+    #carregando .titulo { font-family: Georgia, "Times New Roman", serif; font-size: 26px; color: #123F2D; }
+    #carregando p { margin: 0; font-size: 15px; color: #6F6A5D; max-width: 320px; line-height: 1.5; }
     #carregando-erro { display: none; }
     #carregando button {
       margin-top: 8px; padding: 12px 22px; border-radius: 14px; border: 0;
-      background: #D4AF6A; color: #0E0C0A; font-size: 15px; font-weight: 700;
+      background: #123F2D; color: #F4EEE3; font-size: 15px; font-weight: 700;
     }
     @keyframes girar { to { transform: rotate(360deg); } }
   </style>
