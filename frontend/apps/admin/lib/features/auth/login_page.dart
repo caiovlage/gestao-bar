@@ -57,8 +57,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 padding: const EdgeInsets.all(28),
                 child: Form(
                   key: _form,
-                  child: AutofillGroup(
-                    child: Column(
+                  // Sem AutofillGroup/autofillHints: no Flutter Web, o preenchimento automático do navegador
+                  // deixa o campo de senha travado (não aceita editar depois de colar/sugerir).
+                  child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const Center(child: Marca(largura: 280)),
@@ -72,7 +73,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         TextFormField(
                           controller: _login,
                           autofocus: true,
-                          autofillHints: const [AutofillHints.username],
+                          autocorrect: false,
+                          enableSuggestions: false,
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Login',
@@ -84,7 +86,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         TextFormField(
                           controller: _senha,
                           obscureText: !_senhaVisivel,
-                          autofillHints: const [AutofillHints.password],
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          keyboardType: TextInputType.visiblePassword,
                           onFieldSubmitted: (_) => _entrar(),
                           decoration: InputDecoration(
                             labelText: 'Senha',
@@ -109,7 +113,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               : const Text('Entrar'),
                         ),
                       ],
-                    ),
                   ),
                 ),
               ),
