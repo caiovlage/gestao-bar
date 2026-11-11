@@ -14,6 +14,7 @@ import br.com.bar.gestao.venda.api.dto.VendaDto;
 import br.com.bar.gestao.venda.application.VendaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,15 +48,18 @@ public class PedidoService {
     private final ProdutoConsultaService produtos;
     private final EstoqueService estoqueService;
     private final VendaService vendaService;
+    private final ApplicationEventPublisher eventos;
 
     public PedidoService(PedidoRepository repository, CardapioService cardapio, LimitePedidos limite,
-                         ProdutoConsultaService produtos, EstoqueService estoqueService, VendaService vendaService) {
+                         ProdutoConsultaService produtos, EstoqueService estoqueService, VendaService vendaService,
+                         ApplicationEventPublisher eventos) {
         this.repository = repository;
         this.cardapio = cardapio;
         this.limite = limite;
         this.produtos = produtos;
         this.estoqueService = estoqueService;
         this.vendaService = vendaService;
+        this.eventos = eventos;
     }
 
     // ---------------------------------------------------------------- cliente
@@ -88,6 +92,9 @@ public class PedidoService {
             pedido.adicionarItem(p.id(), p.nome(), item.quantidade(), p.preco(), texto(item.observacao()));
         }
         repository.save(pedido);
+        // aviso aos aparelhos do bar (push), enviado só depois do commit
+        eventos.publishEvent(new PedidoRecebido(pedido.getNumero(), pedido.getClienteNome(), pedido.getLocal(),
+                pedido.getItens().size(), pedido.getTotal()));
         log.info("Pedido nº {} recebido do cardápio: entrega={} total={} itens={}", pedido.getNumero(),
                 pedido.getLocal(), pedido.getTotal(), pedido.getItens().size());
         return PedidoDto.Acompanhamento.of(pedido);

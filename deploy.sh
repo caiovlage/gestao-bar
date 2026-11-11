@@ -189,6 +189,9 @@ main() {
     sudo chmod 755 /var/www /var/www/gestao-bar
   fi
 
+  # Protocolo público (Cloudflare/proxy HTTPS): arquivo nosso, sempre atualizado
+  sudo cp infra/nginx/gestao-bar-mapa.conf /etc/nginx/conf.d/gestao-bar-mapa.conf
+
   if [[ ! -f "$NGINX_CONF" ]]; then
     sudo cp infra/nginx/gestao-bar.conf "$NGINX_CONF"
     # O site de boas-vindas do nginx.conf não pode ser o site padrão da porta 80.
@@ -253,6 +256,23 @@ main() {
       sudo cp "$NGINX_CONF.antes-previa" "$NGINX_CONF"
       aviso "Não foi possível configurar a prévia de link; configuração anterior restaurada."
       aviso "Copie manualmente as linhas de infra/nginx/cardapio-og.trecho para o bloco location /cardapio/."
+    fi
+  fi
+
+  # Atrás do Cloudflare: redirecionamentos relativos e prévia de link com https
+  if [[ -f "$NGINX_CONF" ]] && { ! sudo grep -q 'absolute_redirect off' "$NGINX_CONF" \
+       || sudo grep -q "sub_filter '__ORIGEM__' '\$scheme://\$host'" "$NGINX_CONF"; }; then
+    info "Ajustando o nginx para HTTPS via proxy (Cloudflare)"
+    sudo cp "$NGINX_CONF" "$NGINX_CONF.antes-proxy"
+    if ! sudo grep -q 'absolute_redirect off' "$NGINX_CONF"; then
+      sudo sed -i '0,/server_tokens off;/s//server_tokens off;\n    absolute_redirect off;/' "$NGINX_CONF"
+    fi
+    sudo sed -i "s#sub_filter '__ORIGEM__' '\$scheme://\$host';#sub_filter '__ORIGEM__' '\$esquema_publico://\$host';#" "$NGINX_CONF"
+    if sudo nginx -t -q 2>/dev/null; then
+      ok "nginx ajustado (cópia anterior: $NGINX_CONF.antes-proxy)"
+    else
+      sudo cp "$NGINX_CONF.antes-proxy" "$NGINX_CONF"
+      aviso "Não foi possível ajustar o nginx para o proxy; configuração anterior restaurada."
     fi
   fi
 
@@ -339,9 +359,8 @@ main() {
     fi
     # Página inicial otimizada para celular, ícones da marca, manifest e imagem de prévia de link
     cp -r frontend/apps/cardapio/web_modelo/. frontend/apps/cardapio/web/
-    # Painel: ícones da marca, manifest e título da aba
+    # Painel: index, ícones, manifest e notificações push (push-sw.js, push-cliente.js)
     cp -r frontend/apps/admin/web_modelo/. frontend/apps/admin/web/
-    sed -i 's#<title>.*</title>#<title>Entre Nós · Painel</title>#' frontend/apps/admin/web/index.html
     if [[ $LIMPO -eq 1 ]]; then
       (cd frontend/apps/admin && flutter clean >/dev/null)
       (cd frontend/apps/cardapio && flutter clean >/dev/null)

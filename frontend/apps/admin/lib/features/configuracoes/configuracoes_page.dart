@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../relatorios/relatorios.dart';
 import '../unidades/unidades.dart';
 import 'backup_card.dart';
+import '../notificacoes/notificacoes.dart';
 import 'cardapio_digital_card.dart';
 import 'vitrine_card.dart';
 
@@ -34,6 +35,8 @@ class ConfiguracoesPage extends ConsumerWidget {
             data: (valores) => _ConfiguracoesGerais(valores: valores),
           ),
         ),
+        const SizedBox(height: 16),
+        const NotificacoesCard(),
         const SizedBox(height: 16),
         const CardapioDigitalCard(),
         const SizedBox(height: 16),

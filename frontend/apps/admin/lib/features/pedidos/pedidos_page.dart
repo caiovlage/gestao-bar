@@ -9,6 +9,7 @@ import '../../app/widgets/paginacao.dart';
 import '../caixa/caixa.dart';
 import '../estoque/estoque.dart';
 import '../vendas/vendas.dart';
+import '../notificacoes/notificacoes.dart';
 import 'pedidos.dart';
 
 /// Painel de pedidos do cardápio digital: kanban atualizado a cada 10 segundos.
@@ -87,6 +88,7 @@ class _PedidosPageState extends ConsumerState<PedidosPage> {
               selected: {_historico},
               onSelectionChanged: (s) => setState(() => _historico = s.first),
             ),
+            const BotaoNotificacoes(),
             IconButton(
               tooltip: 'Atualizar',
               onPressed: () {
@@ -97,6 +99,7 @@ class _PedidosPageState extends ConsumerState<PedidosPage> {
             ),
           ],
         ),
+        const AvisoAtivarNotificacoes(),
         if (_historico)
           const _Historico()
         else

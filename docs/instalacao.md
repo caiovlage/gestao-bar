@@ -121,6 +121,10 @@ Exceção: em instalações anteriores à Etapa 6, o script **acrescenta sozinho
 - **Prévia do link**: ao colar o link no WhatsApp aparece a imagem da marca. O WhatsApp guarda a prévia
   por alguns dias: se colou o link antes da atualização, a imagem nova pode demorar a aparecer
   (teste com `http://SERVIDOR/cardapio/?v=2`).
+- **Notificações de novos pedidos** (precisa de HTTPS): em cada celular ou notebook da equipe, abra o
+  painel pelo `https://` e toque em **Ativar neste aparelho** (Configurações ou sino em Pedidos); o
+  navegador pergunta se permite notificações. No **iPhone**, primeiro adicione o painel à Tela de Início
+  (Compartilhar → Adicionar à Tela de Início) e ative pelo ícone. Use **Enviar teste** para conferir.
 - **Vitrine** (Configurações → Vitrine do cardápio): escolha as seções de destaque do topo do cardápio
   (Sugestões da casa, Promoções, Mais pedidos, Menos pedidos, Novidades), a ordem, os títulos e a
   quantidade. Promoções e sugestões são definidas no cadastro de cada produto.
