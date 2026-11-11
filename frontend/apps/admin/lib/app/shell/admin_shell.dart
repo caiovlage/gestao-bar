@@ -32,7 +32,13 @@ class AdminShell extends ConsumerWidget {
     if (largura < larguraTablet) {
       final atual = itensMenu.where((i) => caminho.startsWith(i.caminho)).firstOrNull;
       return Scaffold(
-        appBar: AppBar(title: Text(atual?.rotulo ?? 'Gestão do Bar')),
+        appBar: AppBar(
+          title: Row(children: [
+            const Marca(versao: VersaoMarca.simbolo, altura: 22, cor: AppCores.ambar),
+            const SizedBox(width: 10),
+            Flexible(child: Text(atual?.rotulo ?? 'Entre Nós', overflow: TextOverflow.ellipsis)),
+          ]),
+        ),
         drawer: Drawer(
           backgroundColor: AppCores.grafite,
           child: _MenuLateral(caminho: caminho, expandido: true, aoNavegar: () => Navigator.pop(context)),
@@ -72,26 +78,22 @@ class _MenuLateral extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Logo em dourado sobre o verde, como na capa do cardápio
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: expandido ? 20 : 0, vertical: 22),
-            child: Row(
-              mainAxisAlignment: expandido ? MainAxisAlignment.start : MainAxisAlignment.center,
-              children: [
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppCores.ambar,
-                  child: Icon(Icons.local_bar, size: 20, color: AppCores.sobreAmbar),
-                ),
-                if (expandido) ...[
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Gestão do Bar',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
-                  ),
-                ],
-              ],
-            ),
+            padding: EdgeInsets.fromLTRB(expandido ? 24 : 8, 24, expandido ? 24 : 8, 18),
+            child: expandido
+                ? const Marca(versao: VersaoMarca.compacta, largura: 180, cor: AppCores.ambar)
+                : const Marca(versao: VersaoMarca.simbolo, largura: 52, cor: AppCores.ambar),
           ),
+          if (expandido)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 14),
+              child: Text('BAR DE PISCINA & BISTRÔ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppCores.textoSidebar, fontSize: 10, letterSpacing: 2.4)),
+            ),
+          const Divider(color: AppCores.grafiteClaro, indent: 20, endIndent: 20),
+          const SizedBox(height: 8),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 10),

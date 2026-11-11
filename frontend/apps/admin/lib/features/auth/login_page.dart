@@ -46,7 +46,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppCores.grafite,
+      backgroundColor: AppCores.verde,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -61,18 +61,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppCores.ambar,
-                          child: Icon(Icons.local_bar, size: 32, color: AppCores.sobreAmbar),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Gestão do Bar',
-                          textAlign: TextAlign.center,
-                          style: tema.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 4),
+                        const Center(child: Marca(largura: 280)),
+                        const SizedBox(height: 20),
                         Text(
                           'Entre para acessar o painel',
                           textAlign: TextAlign.center,

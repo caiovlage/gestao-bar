@@ -114,7 +114,7 @@ class _Conteudo extends StatelessWidget {
         lado(
           PainelCard(
             titulo: 'Faturamento e lucro bruto por dia',
-            subtitulo: 'Âmbar: faturamento · Verde: lucro bruto',
+            subtitulo: 'Verde: faturamento · Dourado: lucro bruto',
             altura: 280,
             child: GraficoVendasDia(pontos: p.vendasPorDia),
           ),

@@ -322,7 +322,7 @@ main() {
     fi
     # Página inicial otimizada para celular (tela de carregamento imediata, cores, ícone na tela inicial)
     cp frontend/apps/cardapio/web_modelo/index.html frontend/apps/cardapio/web/index.html
-    sed -i 's/"name": *"[^"]*"/"name": "Cardápio"/; s/"short_name": *"[^"]*"/"short_name": "Cardápio"/; s/"background_color": *"[^"]*"/"background_color": "#F4EEE3"/; s/"theme_color": *"[^"]*"/"theme_color": "#F4EEE3"/'         frontend/apps/cardapio/web/manifest.json
+    sed -i 's/"name": *"[^"]*"/"name": "Entre Nós · Cardápio"/; s/"short_name": *"[^"]*"/"short_name": "Entre Nós"/; s/"background_color": *"[^"]*"/"background_color": "#F4EEE3"/; s/"theme_color": *"[^"]*"/"theme_color": "#F4EEE3"/'         frontend/apps/cardapio/web/manifest.json
     if [[ $LIMPO -eq 1 ]]; then
       (cd frontend/apps/admin && flutter clean >/dev/null)
       (cd frontend/apps/cardapio && flutter clean >/dev/null)

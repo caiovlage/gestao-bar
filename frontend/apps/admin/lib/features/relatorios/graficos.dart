@@ -5,15 +5,15 @@ import 'package:intl/intl.dart';
 
 import 'relatorios.dart';
 
-/// Paleta dos gráficos (âmbar da identidade + cores de apoio legíveis).
+/// Paleta dos gráficos (identidade Entre Nós + cores de apoio legíveis).
 const coresGrafico = [
-  Color(0xFFF59E0B),
-  Color(0xFF1F2328),
-  Color(0xFF0EA5E9),
-  Color(0xFF10B981),
-  Color(0xFF8B5CF6),
-  Color(0xFFEF4444),
-  Color(0xFF64748B),
+  Color(0xFF123F2D), // verde profundo
+  Color(0xFFC9A04A), // dourado
+  Color(0xFF2A8A86), // azul piscina
+  Color(0xFF7FB069), // verde claro
+  Color(0xFFB5651D), // terracota
+  Color(0xFF6F6A5D), // cinza quente
+  Color(0xFFD9B98A), // areia
 ];
 
 final _compacto = NumberFormat.compactCurrency(locale: 'pt_BR', symbol: r'R$', decimalDigits: 0);

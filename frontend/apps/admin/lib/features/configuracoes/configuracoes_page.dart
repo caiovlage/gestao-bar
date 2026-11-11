@@ -58,8 +58,6 @@ class _ConfiguracoesGerais extends ConsumerStatefulWidget {
 
 class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
   late final _nomeBar = TextEditingController(text: widget.valores['nome_bar']);
-  late final _subtitulo = TextEditingController(text: widget.valores['cardapio_subtitulo']);
-  late final _slogan = TextEditingController(text: widget.valores['cardapio_slogan']);
   late bool _cardapioAberto = widget.valores['cardapio_aberto'] == 'true';
   late bool _estoqueNegativo = widget.valores['permitir_estoque_negativo'] == 'true';
   bool _salvando = false;
@@ -67,8 +65,6 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
   @override
   void dispose() {
     _nomeBar.dispose();
-    _subtitulo.dispose();
-    _slogan.dispose();
     super.dispose();
   }
 
@@ -84,10 +80,6 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
     try {
       await ref.read(apiClientProvider).put('/api/admin/configuracoes', corpo: {
         'nome_bar': _nomeBar.text.trim(),
-        if (widget.valores.containsKey('cardapio_subtitulo') && _subtitulo.text.trim().isNotEmpty)
-          'cardapio_subtitulo': _subtitulo.text.trim(),
-        if (widget.valores.containsKey('cardapio_slogan') && _slogan.text.trim().isNotEmpty)
-          'cardapio_slogan': _slogan.text.trim(),
         'cardapio_aberto': '$_cardapioAberto',
         'permitir_estoque_negativo': '$_estoqueNegativo',
       });
@@ -114,27 +106,8 @@ class _ConfiguracoesGeraisState extends ConsumerState<_ConfiguracoesGerais> {
           TextField(
             controller: _nomeBar,
             maxLength: 100,
-            decoration: const InputDecoration(labelText: 'Nome do bar', helperText: 'Exibido no cardápio digital'),
+            decoration: const InputDecoration(labelText: 'Nome do bar', helperText: 'Usado no painel e nos comprovantes (o cardápio exibe o logo)'),
           ),
-          if (widget.valores.containsKey('cardapio_subtitulo'))
-            TextField(
-              controller: _subtitulo,
-              maxLength: 60,
-              decoration: const InputDecoration(
-                labelText: 'Subtítulo do cardápio',
-                hintText: 'Bar de Piscina & Bistrô',
-                helperText: 'Aparece abaixo do nome, em letras maiúsculas',
-              ),
-            ),
-          if (widget.valores.containsKey('cardapio_slogan'))
-            TextField(
-              controller: _slogan,
-              maxLength: 80,
-              decoration: const InputDecoration(
-                labelText: 'Frase do cardápio',
-                hintText: 'alma carioca, coração de bistrô',
-              ),
-            ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Cardápio aberto para pedidos'),

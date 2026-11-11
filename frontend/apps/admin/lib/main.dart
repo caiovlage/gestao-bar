@@ -20,7 +20,7 @@ class AdminApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'Gestão do Bar',
+      title: 'Entre Nós · Painel',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.admin(),
       // No celular, versão compacta do tema; em tablet e computador nada muda.

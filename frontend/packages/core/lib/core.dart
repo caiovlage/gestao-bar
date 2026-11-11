@@ -11,4 +11,5 @@ export 'widgets/cabecalho_pagina.dart';
 export 'widgets/dialogos.dart';
 export 'widgets/estados.dart';
 export 'widgets/grade_responsiva.dart';
+export 'widgets/marca.dart';
 export 'widgets/status_chip.dart';

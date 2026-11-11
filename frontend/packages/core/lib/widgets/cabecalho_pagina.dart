@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
 import 'grade_responsiva.dart';
 
 /// Título da página com subtítulo e ações à direita (quebra em telas estreitas).
@@ -18,9 +19,7 @@ class CabecalhoPagina extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(titulo,
-            style: (celular ? tema.textTheme.titleLarge : tema.textTheme.headlineSmall)
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        Text(titulo, style: estiloTitulo(celular ? 24 : 30)),
         if (subtitulo != null)
           Text(subtitulo!,
               style: (celular ? tema.textTheme.bodySmall : tema.textTheme.bodyMedium)
@@ -72,7 +71,7 @@ class CabecalhoPagina extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(titulo, style: tema.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(titulo, style: estiloTitulo(30)),
               if (subtitulo != null)
                 Text(subtitulo!, style: tema.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600)),
             ],

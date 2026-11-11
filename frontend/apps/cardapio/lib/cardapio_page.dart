@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:core/core.dart' show formatarMoeda, mensagemDeErro;
+import 'package:core/core.dart' show Marca, VersaoMarca, formatarMoeda, mensagemDeErro;
 import 'package:flutter/material.dart';
 
 import 'dados.dart';
-import 'logo.dart';
 import 'pedido_page.dart';
 import 'tema.dart';
 
@@ -199,7 +198,7 @@ class _CardapioPageState extends State<CardapioPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _Cabecalho(nomeBar: c.nomeBar, subtitulo: c.subtitulo, slogan: c.slogan, aoAtualizar: _recarregar),
+            _Cabecalho(aoAtualizar: _recarregar),
             SliverPersistentHeader(
               pinned: true,
               delegate: _BarraFiltros(
@@ -334,11 +333,8 @@ String _semAcento(String texto) {
 // =============================================================================
 
 class _Cabecalho extends StatelessWidget {
-  const _Cabecalho({required this.nomeBar, this.subtitulo, this.slogan, required this.aoAtualizar});
+  const _Cabecalho({required this.aoAtualizar});
 
-  final String nomeBar;
-  final String? subtitulo;
-  final String? slogan;
   final VoidCallback aoAtualizar;
 
   static const _alturaAberta = 320.0;
@@ -383,23 +379,9 @@ class _Cabecalho extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const SimboloMarca(largura: 132),
-                    const SizedBox(height: 2),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(nomeBar, textAlign: TextAlign.center, style: serifa(48, peso: FontWeight.w500, altura: 1)),
+                    LayoutBuilder(
+                      builder: (context, k) => Marca(largura: k.maxWidth.clamp(200.0, 360.0)),
                     ),
-                    if (subtitulo != null && subtitulo!.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(subtitulo!.toUpperCase(), style: rotuloEspacado(tamanho: 12)),
-                      ),
-                    ],
-                    if (slogan != null && slogan!.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      FraseComLinhas(slogan!),
-                    ],
                     const SizedBox(height: 14),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -429,11 +411,7 @@ class _Cabecalho extends StatelessWidget {
               child: Opacity(
                 opacity: (1 - aberto * 2).clamp(0.0, 1.0),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const SimboloMarca(largura: 40),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(nomeBar, maxLines: 1, overflow: TextOverflow.ellipsis, style: serifa(22, peso: FontWeight.w500)),
-                  ),
+                  const Marca(versao: VersaoMarca.compacta, altura: 40),
                 ]),
               ),
             ),
@@ -460,7 +438,7 @@ class _Ornamento extends StatelessWidget {
       linha(),
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 10),
-        child: SimboloMarca(largura: 34),
+        child: Marca(versao: VersaoMarca.simbolo, largura: 34),
       ),
       linha(),
     ]);
@@ -1003,7 +981,7 @@ class _CarregandoState extends State<_Carregando> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3.5)),
           const SizedBox(height: 20),
-          Text('Cardápio', style: serifa(24)),
+          const Marca(largura: 220),
           const SizedBox(height: 8),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -1074,8 +1052,7 @@ class _Foto extends StatelessWidget {
         child: escuro
             ? Padding(
                 padding: const EdgeInsets.only(bottom: 40),
-                child: SimboloMarca(
-                    largura: tamanhoIcone * 2, corMontanha: Paleta.douradoClaro, corSol: Paleta.douradoSuave),
+                child: Marca(versao: VersaoMarca.simbolo, largura: tamanhoIcone * 2, cor: Paleta.douradoClaro),
               )
             : Icon(Icons.local_bar_outlined, size: tamanhoIcone, color: Paleta.verde.withValues(alpha: 0.5)),
       ),

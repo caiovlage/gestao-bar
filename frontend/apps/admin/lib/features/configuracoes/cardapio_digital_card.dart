@@ -45,8 +45,11 @@ class QrCodeCardapio extends StatelessWidget {
           padding: EdgeInsets.all(logo * 0.08),
           decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
           child: Container(
-            decoration: const BoxDecoration(color: AppCores.ambar, shape: BoxShape.circle),
-            child: Icon(Icons.local_bar, size: logo * 0.55, color: AppCores.sobreAmbar),
+            decoration: const BoxDecoration(color: AppCores.verde, shape: BoxShape.circle),
+            child: Padding(
+              padding: EdgeInsets.all(logo * 0.16),
+              child: const Marca(versao: VersaoMarca.simbolo, cor: AppCores.offWhite),
+            ),
           ),
         ),
       ]),
